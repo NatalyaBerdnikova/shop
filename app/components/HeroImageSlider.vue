@@ -140,6 +140,9 @@ section.hero(
 .hero {
   position: relative;
   isolation: isolate;
+  width: 100%;
+  max-width: 2000px;
+  margin-inline: auto;
   min-height: min(88vh, 900px);
   max-height: 1000px;
   display: flex;

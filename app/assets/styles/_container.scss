@@ -1,0 +1,8 @@
+// Универсальная контентная колонка для страниц
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1560px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
