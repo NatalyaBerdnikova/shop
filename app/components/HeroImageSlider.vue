@@ -67,111 +67,73 @@ watch(
 const currentSlide = computed(() => slides.value[current.value])
 </script>
 
-<template>
-  <section
-    :id="regionId"
-    class="hero"
-    role="region"
-    aria-roledescription="карусель"
-    aria-label="Главная галерея"
-    @mouseenter="stopAutoplay"
-    @mouseleave="startAutoplay"
-    @focusin="stopAutoplay"
-    @focusout="startAutoplay"
-  >
-    <div class="hero__media" aria-hidden="true">
-      <Transition name="hero-fade">
-        <img
-          v-if="currentSlide"
-          :key="current"
-          class="hero__img"
-          :src="currentSlide.src"
-          :alt="currentSlide.alt"
-          :fetchpriority="current === 0 ? 'high' : 'low'"
-          :loading="current === 0 ? 'eager' : 'lazy'"
-          sizes="100vw"
-        >
-      </Transition>
-    </div>
-
-    <div class="hero__scrim" aria-hidden="true" />
-
-    <div class="hero__content">
-      <Transition mode="out-in" name="hero-text">
-        <div
-          v-if="currentSlide"
-          :key="currentSlide.src"
-          class="hero__text"
-        >
-          <h1 class="hero__title">
-            {{ currentSlide.headline }}
-          </h1>
-          <p
-            v-if="currentSlide.tagline"
-            class="hero__tagline"
-          >
-            {{ currentSlide.tagline }}
-          </p>
-        </div>
-      </Transition>
-    </div>
-
-    <div
-      :id="liveId"
-      class="hero__live"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <template v-if="currentSlide">
-        Слайд {{ current + 1 }} из {{ slides.length }}: {{ currentSlide.headline }}
-      </template>
-    </div>
-
-    <div
-      v-if="slides.length > 1"
-      class="hero__controls"
-    >
-      <button
-        type="button"
-        class="hero__btn hero__btn--prev"
-        aria-label="Предыдущий слайд"
-        @click="go(-1)"
-      >
-        <span class="hero__chevron" aria-hidden="true">‹</span>
-      </button>
-      <button
-        type="button"
-        class="hero__btn hero__btn--next"
-        aria-label="Следующий слайд"
-        @click="go(1)"
-      >
-        <span class="hero__chevron" aria-hidden="true">›</span>
-      </button>
-    </div>
-
-    <ul
-      v-if="slides.length > 1"
-      class="hero__dots"
-      role="tablist"
-      aria-label="Выбор слайда"
-    >
-      <li
-        v-for="(_, i) in slides"
-        :key="i"
-      >
-        <button
-          type="button"
-          role="tab"
-          class="hero__dot"
-          :class="{ 'hero__dot--active': i === current }"
-          :aria-selected="i === current"
-          :tabindex="i === current ? 0 : -1"
-          :aria-label="`Слайд ${i + 1}`"
-          @click="goTo(i)"
-        />
-      </li>
-    </ul>
-  </section>
+<template lang="pug">
+section.hero(
+  :id="regionId"
+  role="region"
+  aria-roledescription="карусель"
+  aria-label="Главная галерея"
+  @mouseenter="stopAutoplay"
+  @mouseleave="startAutoplay"
+  @focusin="stopAutoplay"
+  @focusout="startAutoplay"
+)
+  .hero__media(aria-hidden="true")
+    Transition(name="hero-fade")
+      img.hero__img(
+        v-if="currentSlide"
+        :key="current"
+        :src="currentSlide.src"
+        :alt="currentSlide.alt"
+        :fetchpriority="current === 0 ? 'high' : 'low'"
+        :loading="current === 0 ? 'eager' : 'lazy'"
+        sizes="100vw"
+      )
+  .hero__scrim(aria-hidden="true")
+  .hero__content
+    Transition(name="hero-text" mode="out-in")
+      .hero__text(
+        v-if="currentSlide"
+        :key="currentSlide.src"
+      )
+        h1.hero__title {{ currentSlide.headline }}
+        p.hero__tagline(v-if="currentSlide.tagline") {{ currentSlide.tagline }}
+  .hero__live(
+    :id="liveId"
+    aria-live="polite"
+    aria-atomic="true"
+  )
+    template(v-if="currentSlide")
+      | Слайд {{ current + 1 }} из {{ slides.length }}: {{ currentSlide.headline }}
+  .hero__controls(v-if="slides.length > 1")
+    button.hero__btn.hero__btn--prev(
+      type="button"
+      aria-label="Предыдущий слайд"
+      @click="go(-1)"
+    )
+      span.hero__chevron(aria-hidden="true") ‹
+    button.hero__btn.hero__btn--next(
+      type="button"
+      aria-label="Следующий слайд"
+      @click="go(1)"
+    )
+      span.hero__chevron(aria-hidden="true") ›
+  .hero__dots(
+    v-if="slides.length > 1"
+    role="tablist"
+    aria-label="Выбор слайда"
+  )
+    button.hero__dot(
+      v-for="(_, i) in slides"
+      :key="i"
+      type="button"
+      role="tab"
+      :class="{ 'hero__dot--active': i === current }"
+      :aria-selected="i === current"
+      :tabindex="i === current ? 0 : -1"
+      :aria-label="`Слайд ${i + 1}`"
+      @click="goTo(i)"
+    )
 </template>
 
 <style scoped>
@@ -335,7 +297,6 @@ const currentSlide = computed(() => slides.value[current.value])
   transform: translateX(-50%);
   display: flex;
   gap: 0.5rem;
-  list-style: none;
   margin: 0;
   padding: 0;
 }

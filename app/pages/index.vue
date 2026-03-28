@@ -10,8 +10,7 @@ useHead({
 })
 </script>
 
-<template>
-  <main>
-    <HeroImageSlider />
-  </main>
+<template lang="pug">
+main
+  HeroImageSlider
 </template>
