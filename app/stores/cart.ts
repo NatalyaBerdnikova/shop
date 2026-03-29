@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { CartLine, CartLineInput } from '../types/cart'
+import type { CartLine, CartLineInput } from '~~/types/cart'
 
-export type { CartLine, CartLineInput } from '../types/cart'
+export type { CartLine, CartLineInput } from '~~/types/cart'
 
 export const useCartStore = defineStore('cart', () => {
   const lines = ref<CartLine[]>([])

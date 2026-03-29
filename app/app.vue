@@ -1,5 +1,6 @@
 <template lang="pug">
 div
   NuxtRouteAnnouncer
-  NuxtPage
+  NuxtLayout
+    NuxtPage
 </template>
