@@ -6,7 +6,7 @@ import {
 
 const catalogLinks = computed(() =>
   primaryNavLinks.filter(
-    (l) => l.to !== '/' && l.to !== '/kontakty'
+    (l) => l.to !== '/' && l.to !== '/contacts'
   )
 )
 </script>
@@ -16,9 +16,9 @@ footer.site-footer(role="contentinfo")
   .site-footer__main
     .container.site-footer__grid
       .site-footer__brand-block
-        NuxtLink.site-footer__logo(to="/") Сияние
+        NuxtLink.site-footer__logo(to="/") Цитадель
         p.site-footer__about
-          | Ювелирные украшения из серебра и золота: кольца, подвески, серьги и браслеты.
+          | Украшения из полимерной смолы: кольца, подвески, серьги и браслеты.
           | Ручная работа и внимание к деталям.
 
       .site-footer__col
@@ -49,7 +49,7 @@ footer.site-footer(role="contentinfo")
 
   .site-footer__bottom
     .container.site-footer__bottom-inner
-      p.site-footer__copy © {{ new Date().getFullYear() }} Сияние. Все права защищены.
+      p.site-footer__copy © {{ new Date().getFullYear() }} Цитадель. Все права защищены.
       p.site-footer__legal
         NuxtLink.site-footer__mini-link(to="/privacy") Политика конфиденциальности
         span.site-footer__dot(aria-hidden="true") ·
