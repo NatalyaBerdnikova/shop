@@ -13,4 +13,5 @@ useHead({
 <template lang="pug">
 main
   HeroImageSlider
+  BrandMarquee
 </template>

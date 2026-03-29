@@ -5,18 +5,16 @@ export interface NavLink {
 
 /** Десктоп и мобильное меню — один и тот же набор ссылок */
 export const primaryNavLinks: NavLink[] = [
-  { label: 'Главная', to: '/' },
-  { label: 'Кольца', to: '/koltsa' },
-  { label: 'Подвески', to: '/podveski' },
-  { label: 'Серьги', to: '/sergi' },
-  { label: 'Браслеты', to: '/braslety' },
-  { label: 'Броши', to: '/broshi' },
-  { label: 'Коллекции', to: '/kollektsii' },
-  { label: 'Контакты', to: '/kontakty' }
+  { label: 'Каталог', to: '/catalog' },
+  { label: 'Акции', to: '/sale' },
+  { label: 'Подборки', to: '/collections' },
+  { label: 'Доставка и оплата', to: '/delivery' },
+  { label: 'Контакты', to: '/contacts' },
+  { label: 'Подарочные карты', to: '/gift-cards' }
 ]
 
 export const footerServiceLinks: NavLink[] = [
-  { label: 'Доставка и оплата', to: '/dostavka' },
-  { label: 'Уход за изделиями', to: '/ukhod' },
-  { label: 'Возврат', to: '/vozvrat' }
+  { label: 'Доставка и оплата', to: '/delivery' },
+  { label: 'Уход за изделиями', to: '/care' },
+  { label: 'Возврат', to: '/return' }
 ]
