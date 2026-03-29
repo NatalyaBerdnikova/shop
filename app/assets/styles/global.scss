@@ -1,1 +1,9 @@
 @use './container' as *;
+@use './variables' as *;
+
+body {
+  margin: 0;
+  padding: 0;
+  background: $color-paper;
+  color: $color-ink;
+}

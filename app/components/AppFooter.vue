@@ -57,168 +57,166 @@ footer.site-footer(role="contentinfo")
 </template>
 
 <style scoped lang="scss">
-$gold: #9a7b4f;
-$ink: #1a1918;
-$muted: rgb(26 25 24 / 58%);
+@use '~/assets/styles/variables' as *;
 
 .site-footer {
   margin-top: auto;
-  background: #0f0f10;
-  color: rgb(250 249 247 / 88%);
-}
+  background: $color-bg-dark;
+  color: $color-white-88;
 
-.site-footer__main {
-  padding-block: clamp(2.5rem, 6vw, 4rem);
-}
-
-.site-footer__grid {
-  display: grid;
-  gap: clamp(2rem, 4vw, 3rem);
-
-  @media (min-width: 640px) {
-    grid-template-columns: 1.4fr 1fr 1fr 1fr;
-  }
-}
-
-.site-footer__brand-block {
-  @media (min-width: 640px) {
-    grid-column: span 1;
-  }
-}
-
-.site-footer__logo {
-  display: inline-block;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: #faf9f7;
-
-  &:hover {
-    color: $gold;
+  &__main {
+    padding-block: clamp(2.5rem, 6vw, 4rem);
   }
 
-  &:focus-visible {
-    outline: 2px solid $gold;
-    outline-offset: 4px;
-  }
-}
+  &__grid {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
 
-.site-footer__about {
-  margin: 0;
-  max-width: 28ch;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: $muted;
-}
-
-.site-footer__heading {
-  margin: 0 0 1rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgb(250 249 247 / 45%);
-}
-
-.site-footer__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.site-footer__link {
-  font-size: 0.9rem;
-  text-decoration: none;
-  color: rgb(250 249 247 / 88%);
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: $gold;
+    @media (min-width: 640px) {
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    }
   }
 
-  &:focus-visible {
-    outline: 2px solid $gold;
-    outline-offset: 2px;
-  }
-}
-
-.site-footer__contacts {
-  margin: 0;
-  font-size: 0.9rem;
-  font-style: normal;
-  line-height: 1.6;
-  color: $muted;
-
-  p {
-    margin: 0 0 0.5rem;
-  }
-}
-
-.site-footer__contact-link {
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    color: $gold;
+  &__brand-block {
+    @media (min-width: 640px) {
+      grid-column: span 1;
+    }
   }
 
-  &:focus-visible {
-    outline: 2px solid $gold;
-    outline-offset: 2px;
-  }
-}
+  &__logo {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: $color-paper;
 
-.site-footer__hours {
-  margin-top: 0.35rem !important;
-  font-size: 0.85rem;
-  color: rgb(250 249 247 / 45%);
-}
+    &:hover {
+      color: $color-gold;
+    }
 
-.site-footer__bottom {
-  border-top: 1px solid rgb(250 249 247 / 8%);
-}
-
-.site-footer__bottom-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-block: 1.25rem;
-  font-size: 0.8rem;
-  color: rgb(250 249 247 / 45%);
-}
-
-.site-footer__copy {
-  margin: 0;
-}
-
-.site-footer__legal {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-}
-
-.site-footer__mini-link {
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    color: $gold;
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: 4px;
+    }
   }
 
-  &:focus-visible {
-    outline: 2px solid $gold;
-    outline-offset: 2px;
+  &__about {
+    margin: 0;
+    max-width: 28ch;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: $color-ink-58;
   }
-}
 
-.site-footer__dot {
-  opacity: 0.5;
+  &__heading {
+    margin: 0 0 1rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: $color-white-45;
+  }
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  &__link {
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: $color-white-88;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $color-gold;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: 2px;
+    }
+  }
+
+  &__contacts {
+    margin: 0;
+    font-size: 0.9rem;
+    font-style: normal;
+    line-height: 1.6;
+    color: $color-ink-58;
+
+    p {
+      margin: 0 0 0.5rem;
+    }
+  }
+
+  &__contact-link {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      color: $color-gold;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: 2px;
+    }
+  }
+
+  &__hours {
+    margin-top: 0.35rem !important;
+    font-size: 0.85rem;
+    color: $color-white-45;
+  }
+
+  &__bottom {
+    border-top: 1px solid $color-white-8;
+  }
+
+  &__bottom-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.25rem;
+    font-size: 0.8rem;
+    color: $color-white-45;
+  }
+
+  &__copy {
+    margin: 0;
+  }
+
+  &__legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  &__mini-link {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      color: $color-gold;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: 2px;
+    }
+  }
+
+  &__dot {
+    opacity: 0.5;
+  }
 }
 </style>
