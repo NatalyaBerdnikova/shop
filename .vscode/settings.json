@@ -1,0 +1,15 @@
+{
+  "vetur.enable": false,
+  "vetur.validation.script": false,
+  "vetur.validation.template": false,
+  "vetur.validation.style": false,
+  "vetur.validation.interpolation": false,
+  "vue.server.hybridMode": false,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue"
+  ]
+}

@@ -43,6 +43,7 @@ function addToCart() {
   cart.addItem({
     id: props.product.id,
     productId: props.product.id,
+    slug: props.product.slug,
     title: props.product.title,
     unitPriceCents: props.product.priceCents,
     quantity: quantity.value,

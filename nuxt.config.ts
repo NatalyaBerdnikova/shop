@@ -5,10 +5,18 @@ export default defineNuxtConfig({
 
   css: ['~/assets/styles/global.scss'],
 
+  // Чтобы Vue Language Tools / ts-plugin видел использование переменных в Pug-шаблонах
+  typescript: {
+    tsConfig: {
+      vueCompilerOptions: {
+        plugins: ['@vue/language-plugin-pug']
+      }
+    }
+  },
+
   modules: [
     '@pinia/nuxt',
     '@nuxt/a11y',
-    '@nuxt/content',
     '@nuxt/eslint',
     '@nuxt/fonts',
     '@nuxt/hints',

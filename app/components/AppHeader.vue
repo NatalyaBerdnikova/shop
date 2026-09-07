@@ -60,7 +60,7 @@ header.site-header(role="banner")
 
       .site-header__actions
         NuxtLink.site-header__cart(
-          to="/korzina"
+          to="/cart"
           aria-label="Корзина"
         )
           span.site-header__cart-label Корзина
@@ -111,7 +111,7 @@ header.site-header(role="banner")
         @click="closeMenu"
       ) {{ link.label }}
 
-    NuxtLink.site-header__drawer-cart(to="/korzina" @click="closeMenu")
+    NuxtLink.site-header__drawer-cart(to="/cart" @click="closeMenu")
       | Корзина
       template(v-if="cart.totalQuantity > 0") &nbsp;({{ cart.totalQuantity }})
 </template>
