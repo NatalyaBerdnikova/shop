@@ -44,13 +44,16 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
       span.cart-page__crumb-sep /
       span.cart-page__crumb-current Корзина
 
-    header.cart-page__header
+    header.cart-page__header(v-if="!cart.isEmpty")
       h1.cart-page__title Корзина
-      p.cart-page__subtitle(v-if="!cart.isEmpty") {{ itemsLabel }}
+      p.cart-page__subtitle {{ itemsLabel }}
 
     .cart-page__empty(v-if="cart.isEmpty")
-      p.cart-page__empty-text Пока пусто — загляните в каталог, чтобы выбрать украшение.
+      h1.cart-page__empty-title Корзина пустая
+      p.cart-page__empty-text
+        | Перейдите в каталог, чтобы найти подходящие украшения.
       NuxtLink.cart-page__empty-cta(to="/catalog") Перейти в каталог
+      NuxtLink.cart-page__empty-home(to="/") На главную
 
     .cart-page__layout(v-else)
       ul.cart-page__list(aria-label="Товары в корзине")
@@ -104,11 +107,7 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
             span Сумма
             strong {{ formattedSubtotal }}
           p.cart-page__summary-note Доставка рассчитывается при оформлении
-          button.cart-page__checkout(
-            type="button"
-            disabled
-            title="Оформление заказа скоро появится"
-          ) Оформить заказ
+          NuxtLink.cart-page__checkout(to="/checkout") Оформить заказ
           NuxtLink.cart-page__continue(to="/catalog") Продолжить покупки
           button.cart-page__clear(
             type="button"
@@ -169,10 +168,17 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
 
   &__empty {
     display: grid;
-    gap: 1.25rem;
+    gap: 1rem;
     justify-items: start;
     max-width: 28rem;
-    padding-block: clamp(2rem, 6vw, 4rem);
+    padding-block: clamp(2.5rem, 8vw, 5rem);
+  }
+
+  &__empty-title {
+    margin: 0;
+    font-size: clamp(1.6rem, 4vw, 2.1rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
   &__empty-text {
@@ -193,6 +199,7 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
     text-decoration: none;
     font-size: 0.9rem;
     letter-spacing: 0.04em;
+    margin-top: 0.35rem;
 
     &:hover {
       filter: brightness(1.05);
@@ -201,6 +208,16 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
     &:focus-visible {
       outline: 2px solid $color-gold;
       outline-offset: 3px;
+    }
+  }
+
+  &__empty-home {
+    font-size: 0.9rem;
+    color: $color-ink-55;
+    text-decoration: none;
+
+    &:hover {
+      color: $color-gold;
     }
   }
 
@@ -262,6 +279,11 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
 
   &__checkout {
     margin-top: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
     height: 2.6rem;
     border: none;
     border-radius: 999px;
@@ -269,11 +291,16 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
     color: $color-white;
     font-size: 0.9rem;
     letter-spacing: 0.04em;
+    text-decoration: none;
     cursor: pointer;
 
-    &:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
+    &:hover {
+      filter: brightness(1.05);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: 3px;
     }
   }
 

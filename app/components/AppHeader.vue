@@ -2,10 +2,13 @@
 import { primaryNavLinks } from '~/data/navigation'
 
 const cart = useCartStore()
+const auth = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 
 const menuOpen = ref(false)
 const drawerId = useId()
+const accountMenuOpen = ref(false)
 
 function closeMenu() {
   menuOpen.value = false
@@ -15,10 +18,23 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
+function openLogin() {
+  closeMenu()
+  accountMenuOpen.value = false
+  auth.openLoginModal()
+}
+
+async function logout() {
+  accountMenuOpen.value = false
+  closeMenu()
+  await auth.logout()
+}
+
 watch(
   () => route.fullPath,
   () => {
     closeMenu()
+    accountMenuOpen.value = false
   }
 )
 
@@ -28,11 +44,32 @@ watch(menuOpen, (open) => {
 })
 
 function onEscape(e: KeyboardEvent) {
-  if (e.key === 'Escape' && menuOpen.value) closeMenu()
+  if (e.key === 'Escape') {
+    if (menuOpen.value) closeMenu()
+    accountMenuOpen.value = false
+  }
 }
 
 onMounted(() => {
   window.addEventListener('keydown', onEscape)
+
+  if (route.query.auth === 'success') {
+    auth.fetchMe().then(() => {
+      auth.closeLoginModal()
+    })
+    const query = { ...route.query }
+    delete query.auth
+    delete query.reason
+    router.replace({ query })
+  }
+
+  if (route.query.auth === 'error') {
+    auth.openLoginModal()
+    const query = { ...route.query }
+    delete query.auth
+    delete query.reason
+    router.replace({ query })
+  }
 })
 
 onUnmounted(() => {
@@ -59,6 +96,29 @@ header.site-header(role="banner")
         ) {{ link.label }}
 
       .site-header__actions
+        .site-header__account(v-if="auth.isLoggedIn")
+          button.site-header__account-btn(
+            type="button"
+            :aria-expanded="accountMenuOpen"
+            aria-haspopup="true"
+            @click="accountMenuOpen = !accountMenuOpen"
+          )
+            span.site-header__account-label {{ auth.fullName || 'Аккаунт' }}
+          .site-header__account-menu(v-if="accountMenuOpen")
+            p.site-header__account-meta(v-if="auth.user?.email") {{ auth.user.email }}
+            p.site-header__account-meta(v-if="auth.user?.phone") {{ auth.user.phone }}
+            p.site-header__account-meta(v-if="auth.user?.birthday") {{ auth.user.birthday }}
+            button.site-header__account-logout(
+              type="button"
+              @click="logout"
+            ) Выйти
+
+        button.site-header__login(
+          v-else
+          type="button"
+          @click="openLogin"
+        ) Войти
+
         NuxtLink.site-header__cart(
           to="/cart"
           aria-label="Корзина"
@@ -110,6 +170,16 @@ header.site-header(role="banner")
         :to="link.to"
         @click="closeMenu"
       ) {{ link.label }}
+
+    .site-header__drawer-auth
+      template(v-if="auth.isLoggedIn")
+        p.site-header__drawer-user {{ auth.fullName }}
+        button.site-header__drawer-login(type="button" @click="logout") Выйти
+      button.site-header__drawer-login(
+        v-else
+        type="button"
+        @click="openLogin"
+      ) Войти через Яндекс ID
 
     NuxtLink.site-header__drawer-cart(to="/cart" @click="closeMenu")
       | Корзина
@@ -209,7 +279,86 @@ $bp-nav: 1024px;
   &__actions {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.55rem;
+  }
+
+  &__login,
+  &__account-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 2.3rem;
+    padding: 0 0.8rem;
+    border-radius: 999px;
+    border: 1px solid $color-ink-12;
+    background: transparent;
+    color: $color-ink;
+    font: inherit;
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $color-gold;
+      color: $color-gold;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: 2px;
+    }
+  }
+
+  &__account {
+    position: relative;
+  }
+
+  &__account-label {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media (max-width: #{$bp-nav - 1px}) {
+      max-width: 5.5rem;
+    }
+  }
+
+  &__account-menu {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 110;
+    min-width: 12rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid $color-ink-10;
+    border-radius: 0.75rem;
+    background: $color-white;
+    box-shadow: 0 12px 30px rgb(15 15 16 / 10%);
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  &__account-meta {
+    margin: 0;
+    font-size: 0.78rem;
+    color: $color-ink-55;
+    word-break: break-word;
+  }
+
+  &__account-logout {
+    margin-top: 0.25rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: $color-ink;
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      color: $color-gold;
+    }
   }
 
   &__cart {
@@ -296,7 +445,6 @@ $bp-nav: 1024px;
     margin-inline: auto;
     background: currentcolor;
     border-radius: 1px;
-    transition: transform 0.2s ease, opacity 0.2s ease;
   }
 
   &__backdrop {
@@ -374,11 +522,6 @@ $bp-nav: 1024px;
     background: transparent;
     border: none;
     border-radius: 8px;
-
-    &:focus-visible {
-      outline: 2px solid $color-gold;
-      outline-offset: 2px;
-    }
   }
 
   &__drawer-nav {
@@ -400,15 +543,40 @@ $bp-nav: 1024px;
     &.router-link-active {
       color: $color-gold;
     }
+  }
 
-    &:focus-visible {
-      outline: 2px solid $color-gold;
-      outline-offset: 2px;
+  &__drawer-auth {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid $color-ink-10;
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  &__drawer-user {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  &__drawer-login {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $color-ink;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      color: $color-gold;
     }
   }
 
   &__drawer-cart {
-    margin-top: 1rem;
+    margin-top: 0.75rem;
     padding-top: 1rem;
     font-size: 0.95rem;
     font-weight: 600;
@@ -420,11 +588,6 @@ $bp-nav: 1024px;
 
     &:hover {
       color: $color-gold;
-    }
-
-    &:focus-visible {
-      outline: 2px solid $color-gold;
-      outline-offset: 2px;
     }
   }
 }
