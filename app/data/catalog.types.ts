@@ -12,4 +12,10 @@ export interface CatalogProduct {
   images: string[]
   description: string
   details: string[]
+  /** Вес товарной упаковки в граммах (для Яндекс Доставки / СДЭК). */
+  weightGrams?: number
+  /** Габариты упаковки в миллиметрах. */
+  lengthMm?: number
+  widthMm?: number
+  heightMm?: number
 }

@@ -12,7 +12,12 @@ export const categorySlugSet = new Set(
 
 /** Быстрый индекс по слагу для страницы товара */
 const catalogBySlug = new Map(catalogProducts.map((p) => [p.slug, p] as const))
+const catalogById = new Map(catalogProducts.map((p) => [p.id, p] as const))
 
 export function getCatalogProductBySlug(slug: string) {
   return catalogBySlug.get(slug)
+}
+
+export function getCatalogProductById(id: string) {
+  return catalogById.get(id)
 }

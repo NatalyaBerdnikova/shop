@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import { formatRubFromCents } from '~/utils/formatMoney'
 import type { Order } from '~~/types/order'
-import { CARRIER_LABELS, PAYMENT_LABELS } from '~~/types/order'
+import {
+  ORDER_STATUS_LABELS,
+  YANDEX_PAYMENT_STATUS_LABELS
+} from '~~/types/order'
+import { deliveryLabel } from '#shared/yandexPay'
 
+const cart = useCartStore()
 const route = useRoute()
 const orderId = computed(() => String(route.params.id ?? ''))
+const payQuery = computed(() => String(route.query.pay ?? ''))
 
 const {
   data: order,
   error,
-  pending
+  pending,
+  refresh
 } = await useFetch<Order>(() => `/api/orders/${orderId.value}`, {
   key: () => `order-${orderId.value}`,
   watch: [orderId]
@@ -33,7 +40,44 @@ const createdLabel = computed(() => {
   }).format(new Date(order.value.createdAt))
 })
 
-const pvz = computed(() => order.value?.delivery.pickupPoint ?? null)
+const eyebrow = computed(() => {
+  if (payQuery.value === 'error' || order.value?.status === 'failed') {
+    return 'Оплата не завершена'
+  }
+  if (order.value?.status === 'paid') return 'Заказ оплачен'
+  if (order.value?.status === 'pending' || payQuery.value === 'success') {
+    return 'Заказ оформлен'
+  }
+  return ORDER_STATUS_LABELS[order.value?.status ?? 'checkout']
+})
+
+const lead = computed(() => {
+  if (!order.value) return ''
+  if (order.value.status === 'paid') {
+    return 'Спасибо. Мы соберём заказ и передадим его в доставку.'
+  }
+  if (payQuery.value === 'error' || order.value.status === 'failed') {
+    return 'Оплата не прошла. Можно вернуться в корзину и оформить заказ снова.'
+  }
+  if (payQuery.value === 'success' || order.value.status === 'pending') {
+    return 'Если оплата уже прошла, статус обновится автоматически. Это может занять несколько секунд.'
+  }
+  return 'Оформите доставку и оплату в чекауте Яндекса.'
+})
+
+onMounted(async () => {
+  if (payQuery.value === 'success') {
+    cart.clear()
+  }
+  if (payQuery.value !== 'success' && payQuery.value !== 'error') return
+  try {
+    await $fetch(`/api/orders/${orderId.value}/sync`, { method: 'POST' })
+    await refresh()
+    if (order.value?.status === 'paid') cart.clear()
+  } catch {
+    // Статус подтянется вебхуком.
+  }
+})
 </script>
 
 <template lang="pug">
@@ -54,10 +98,9 @@ const pvz = computed(() => order.value?.delivery.pickupPoint ?? null)
         span.order-page__crumb-current Заказ {{ order.id }}
 
       header.order-page__header
-        p.order-page__eyebrow Заказ принят
+        p.order-page__eyebrow {{ eyebrow }}
         h1.order-page__title {{ order.id }}
-        p.order-page__lead
-          | Спасибо, {{ order.contact.name }}. Мы свяжемся с вами для подтверждения.
+        p.order-page__lead {{ lead }}
         p.order-page__meta {{ createdLabel }}
 
       .order-page__layout
@@ -83,25 +126,28 @@ const pvz = computed(() => order.value?.delivery.pickupPoint ?? null)
           section.order-page__panel
             h2.order-page__panel-title Детали
             dl.order-facts
-              .order-facts__row
+              .order-facts__row(v-if="order.contact?.name || order.contact?.phone || order.contact?.email")
                 dt Контакты
                 dd
-                  | {{ order.contact.name }}
-                  br
-                  | {{ order.contact.phone }}
-                  br
-                  | {{ order.contact.email }}
-              .order-facts__row(v-if="pvz")
-                dt Доставка до ПВЗ
+                  template(v-if="order.contact.name") {{ order.contact.name }}
+                    br
+                  template(v-if="order.contact.phone") {{ order.contact.phone }}
+                    br
+                  template(v-if="order.contact.email") {{ order.contact.email }}
+              .order-facts__row
+                dt Доставка
                 dd
-                  | {{ CARRIER_LABELS[pvz.carrier] }}
-                  br
-                  | {{ pvz.name }}
-                  br
-                  | {{ pvz.city }}, {{ pvz.address }}
+                  | {{ deliveryLabel(order.delivery) }}
+                  template(v-if="order.delivery?.pickupPointName || order.delivery?.address")
+                    br
+                    | {{ order.delivery.pickupPointName || order.delivery.address }}
               .order-facts__row
                 dt Оплата
-                dd {{ PAYMENT_LABELS[order.paymentMethod] }}
+                dd
+                  | {{ YANDEX_PAYMENT_STATUS_LABELS[order.paymentStatus || ''] || ORDER_STATUS_LABELS[order.status] }}
+                  template(v-if="order.paymentMethod")
+                    br
+                    | {{ order.paymentMethod }}
               .order-facts__row(v-if="order.comment")
                 dt Комментарий
                 dd {{ order.comment }}
@@ -112,12 +158,16 @@ const pvz = computed(() => order.value?.delivery.pickupPoint ?? null)
               span {{ formatRubFromCents(order.subtotalCents) }}
             .order-totals__row
               span Доставка
-              span {{ order.deliveryCents === 0 ? 'Бесплатно' : formatRubFromCents(order.deliveryCents) }}
+              span {{ order.deliveryCents === 0 ? 'В чекауте Яндекса' : formatRubFromCents(order.deliveryCents) }}
             .order-totals__row.order-totals__row--total
               span Итого
               strong {{ formatRubFromCents(order.totalCents) }}
 
-          NuxtLink.order-page__cta(to="/catalog") Продолжить покупки
+          a.order-page__cta(
+            v-if="order.paymentUrl && (order.status === 'checkout' || order.status === 'pending' || order.status === 'failed')"
+            :href="order.paymentUrl"
+          ) Вернуться в чекаут Яндекса
+          NuxtLink.order-page__cta(v-else to="/catalog") Продолжить покупки
 </template>
 
 <style scoped lang="scss">

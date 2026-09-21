@@ -106,7 +106,7 @@ function lineTotal(line: { unitPriceCents: number; quantity: number }) {
           .cart-page__summary-row
             span Сумма
             strong {{ formattedSubtotal }}
-          p.cart-page__summary-note Доставка рассчитывается при оформлении
+          p.cart-page__summary-note Доставка и оплата — в чекауте Яндекса
           NuxtLink.cart-page__checkout(to="/checkout") Оформить заказ
           NuxtLink.cart-page__continue(to="/catalog") Продолжить покупки
           button.cart-page__clear(

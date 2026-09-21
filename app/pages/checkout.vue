@@ -1,24 +1,9 @@
 <script setup lang="ts">
 import { formatRubFromCents } from '~/utils/formatMoney'
-import {
-  calcOrderTotals,
-  validateCheckoutForm,
-  type CheckoutFieldErrors
-} from '#shared/orderValidation'
-import type {
-  CheckoutFormInput,
-  Order,
-  PaymentMethod
-} from '~~/types/order'
-import {
-  CARRIER_LABELS,
-  FREE_DELIVERY_MIN_CENTS,
-  PAYMENT_LABELS
-} from '~~/types/order'
+import { FREE_DELIVERY_MIN_CENTS } from '~~/types/order'
 
 const cart = useCartStore()
-const auth = useAuthStore()
-const router = useRouter()
+const route = useRoute()
 const config = useRuntimeConfig()
 
 useHead({
@@ -27,87 +12,25 @@ useHead({
     {
       name: 'description',
       content:
-        'Оформление заказа в Цитадель: контакты, доставка до ПВЗ Яндекс или СДЭК и оплата.'
+        'Оформление заказа в Цитадель через чекаут Яндекса: Яндекс Доставка, СДЭК и оплата.'
     }
   ]
 })
 
-const form = reactive<CheckoutFormInput>({
-  contact: {
-    name: '',
-    phone: '',
-    email: ''
-  },
-  delivery: {
-    carrier: 'yandex',
-    city: 'Москва',
-    pickupPoint: null
-  },
-  paymentMethod: 'card_online',
-  comment: ''
-})
-
-watch(
-  () => auth.user,
-  (user) => {
-    if (!user) return
-    if (!form.contact.name.trim()) {
-      form.contact.name =
-        `${user.firstName} ${user.lastName}`.trim() || user.displayName
-    }
-    if (!form.contact.phone.trim() && user.phone) {
-      form.contact.phone = user.phone
-    }
-    if (!form.contact.email.trim() && user.email) {
-      form.contact.email = user.email
-    }
-  },
-  { immediate: true }
-)
-
-const errors = ref<CheckoutFieldErrors>({})
+const comment = ref('')
 const submitError = ref('')
 const submitting = ref(false)
-const touched = ref(false)
 
+const aborted = computed(() => route.query.pay === 'abort')
+const checkoutReady = computed(() => Boolean(config.public.yandexPayMerchantId))
 const freeDeliveryMinCents = computed(
   () => Number(config.public.freeDeliveryMinCents) || FREE_DELIVERY_MIN_CENTS
 )
-
-const totals = computed(() =>
-  calcOrderTotals(cart.lines, form.delivery.pickupPoint)
-)
-
-const paymentOptions = (Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map(
-  (value) => ({
-    value,
-    label: PAYMENT_LABELS[value]
-  })
-)
-
 const remainingToFree = computed(() =>
-  Math.max(0, freeDeliveryMinCents.value - totals.value.subtotalCents)
+  Math.max(0, freeDeliveryMinCents.value - cart.subtotalCents)
 )
 
-function fieldError(key: keyof CheckoutFieldErrors) {
-  return touched.value ? errors.value[key] : undefined
-}
-
-function validate() {
-  errors.value = validateCheckoutForm(form)
-  return Object.keys(errors.value).length === 0
-}
-
-watch(
-  form,
-  () => {
-    if (touched.value) validate()
-  },
-  { deep: true }
-)
-
-async function onSubmit() {
-  touched.value = true
+async function startYandexCheckout() {
   submitError.value = ''
 
   if (cart.isEmpty) {
@@ -115,35 +38,36 @@ async function onSubmit() {
     return
   }
 
-  if (!validate()) return
+  if (!checkoutReady.value) {
+    submitError.value =
+      'Чекаут Яндекса ещё не подключён. Добавьте merchant id в окружение.'
+    return
+  }
 
   submitting.value = true
   try {
-    const order = await $fetch<Order>('/api/orders', {
+    const result = await $fetch<{ paymentUrl: string }>('/api/checkout/session', {
       method: 'POST',
       body: {
-        ...form,
-        lines: cart.lines
+        comment: comment.value,
+        lines: cart.lines.map((line) => ({
+          productId: line.productId,
+          quantity: line.quantity
+        }))
       }
     })
-    cart.clear()
-    await router.push(`/order/${order.id}`)
+    await navigateTo(result.paymentUrl, { external: true })
   } catch (err: unknown) {
     const fetchError = err as {
-      data?: { data?: { errors?: CheckoutFieldErrors }; message?: string }
+      data?: { data?: { errors?: { lines?: string; form?: string } }; message?: string }
       statusMessage?: string
     }
-    const apiErrors = fetchError.data?.data?.errors
-    if (apiErrors) {
-      errors.value = apiErrors
-      submitError.value =
-        apiErrors.form || apiErrors.lines || 'Проверьте поля формы'
-    } else {
-      submitError.value =
-        fetchError.statusMessage ||
-        fetchError.data?.message ||
-        'Не удалось оформить заказ. Попробуйте ещё раз.'
-    }
+    submitError.value =
+      fetchError.data?.data?.errors?.lines ||
+      fetchError.data?.data?.errors?.form ||
+      fetchError.data?.message ||
+      fetchError.statusMessage ||
+      'Не удалось открыть чекаут Яндекса. Попробуйте ещё раз.'
   } finally {
     submitting.value = false
   }
@@ -160,94 +84,27 @@ async function onSubmit() {
 
     header.checkout-page__header
       h1.checkout-page__title Оформление заказа
-      p.checkout-page__lead Доставка только до пункта выдачи — Яндекс Доставка или СДЭК.
+      p.checkout-page__lead
+        | Доставку, пункт выдачи и оплату выберете на стороне Яндекса.
+        | Доступны Яндекс Доставка и СДЭК.
+
+    .checkout-page__banner(v-if="aborted" role="status")
+      | Оформление прервано. Корзина сохранена — можно попробовать снова.
 
     .checkout-page__empty(v-if="cart.hydrated && cart.isEmpty")
       p.checkout-page__empty-text В корзине пока ничего нет — добавить товары можно в каталоге.
       NuxtLink.checkout-page__empty-cta(to="/catalog") Перейти в каталог
 
-    form.checkout-page__layout(
-      v-else-if="!cart.isEmpty"
-      novalidate
-      @submit.prevent="onSubmit"
-    )
+    .checkout-page__layout(v-else-if="!cart.isEmpty")
       .checkout-page__form
         section.checkout-section
-          h2.checkout-section__title Контакты
-          .checkout-fields
-            .checkout-field
-              label.checkout-field__label(for="checkout-name") Имя
-              input#checkout-name.checkout-field__input(
-                v-model="form.contact.name"
-                type="text"
-                name="name"
-                autocomplete="name"
-                required
-                :aria-invalid="Boolean(fieldError('name'))"
-              )
-              p.checkout-field__error(v-if="fieldError('name')") {{ fieldError('name') }}
-
-            .checkout-field
-              label.checkout-field__label(for="checkout-phone") Телефон
-              input#checkout-phone.checkout-field__input(
-                v-model="form.contact.phone"
-                type="tel"
-                name="phone"
-                autocomplete="tel"
-                inputmode="tel"
-                placeholder="+7 900 000-00-00"
-                required
-                :aria-invalid="Boolean(fieldError('phone'))"
-              )
-              p.checkout-field__error(v-if="fieldError('phone')") {{ fieldError('phone') }}
-
-            .checkout-field
-              label.checkout-field__label(for="checkout-email") Email
-              input#checkout-email.checkout-field__input(
-                v-model="form.contact.email"
-                type="email"
-                name="email"
-                autocomplete="email"
-                required
-                :aria-invalid="Boolean(fieldError('email'))"
-              )
-              p.checkout-field__error(v-if="fieldError('email')") {{ fieldError('email') }}
-
-        section.checkout-section
-          h2.checkout-section__title Доставка до ПВЗ
+          h2.checkout-section__title Как проходит заказ
           p.checkout-section__note
-            | Самовывоза из мастерской нет. Выберите службу и пункт выдачи на карте.
+            | После кнопки «Перейти к оформлению» откроется чекаут Яндекса:
+            | контакты подставятся из Яндекс ID, там же выбираются ПВЗ
+            | Яндекс Доставки или СДЭК и оплата картой, СБП или Сплитом.
             |
             NuxtLink.checkout-section__link(to="/delivery") Подробнее о доставке
-
-          CheckoutPvzPicker(
-            v-model:city="form.delivery.city"
-            v-model:carrier="form.delivery.carrier"
-            v-model:pickup-point="form.delivery.pickupPoint"
-            :subtotal-cents="totals.subtotalCents"
-            :error="fieldError('city') || fieldError('pickupPoint') || fieldError('carrier')"
-          )
-
-        section.checkout-section
-          h2.checkout-section__title Оплата
-          .checkout-options(role="radiogroup" aria-label="Способ оплаты")
-            label.checkout-option(
-              v-for="option in paymentOptions"
-              :key="option.value"
-              :class="{ 'checkout-option--active': form.paymentMethod === option.value }"
-            )
-              input.checkout-option__input(
-                v-model="form.paymentMethod"
-                type="radio"
-                name="paymentMethod"
-                :value="option.value"
-              )
-              span.checkout-option__body
-                span.checkout-option__title {{ option.label }}
-
-          p.checkout-field__error(v-if="fieldError('paymentMethod')") {{ fieldError('paymentMethod') }}
-          p.checkout-online-note(v-if="form.paymentMethod === 'card_online'")
-            | Онлайн-эквайринг подключим отдельно (ЮKassa / Yandex Pay). Сейчас заказ сохраняется как «к оплате».
 
         section.checkout-section
           h2.checkout-section__title Комментарий
@@ -256,7 +113,7 @@ async function onSubmit() {
               | Пожелания к заказу
               span.checkout-field__optional  необязательно
             textarea#checkout-comment.checkout-field__textarea(
-              v-model="form.comment"
+              v-model="comment"
               name="comment"
               rows="3"
               maxlength="500"
@@ -274,36 +131,28 @@ async function onSubmit() {
           .checkout-page__summary-rows
             .checkout-page__summary-row
               span Товары
-              span {{ formatRubFromCents(totals.subtotalCents) }}
+              span {{ formatRubFromCents(cart.subtotalCents) }}
             .checkout-page__summary-row
               span Доставка
-              span
-                template(v-if="!form.delivery.pickupPoint") — выберите ПВЗ
-                template(v-else-if="totals.freeDeliveryApplied") Бесплатно
-                template(v-else) {{ formatRubFromCents(totals.deliveryCents) }}
+              span Считает Яндекс
             .checkout-page__summary-row.checkout-page__summary-row--total
-              span Итого
-              strong {{ formatRubFromCents(totals.totalCents) }}
+              span Товары к оплате
+              strong {{ formatRubFromCents(cart.subtotalCents) }}
 
-          p.checkout-page__free(
-            v-if="remainingToFree > 0"
-          )
+          p.checkout-page__free(v-if="remainingToFree > 0")
             | До бесплатной доставки осталось {{ formatRubFromCents(remainingToFree) }}
-          p.checkout-page__free(v-else) Бесплатная доставка уже действует
-
-          p.checkout-page__pvz(v-if="form.delivery.pickupPoint")
-            strong {{ CARRIER_LABELS[form.delivery.pickupPoint.carrier] }}
-            br
-            | {{ form.delivery.pickupPoint.name }}
-            br
-            | {{ form.delivery.pickupPoint.address }}
+          p.checkout-page__free(v-else) Порог бесплатной доставки уже выполнен
 
           p.checkout-page__submit-error(v-if="submitError" role="alert") {{ submitError }}
 
           button.checkout-page__submit(
-            type="submit"
-            :disabled="submitting"
-          ) {{ submitting ? 'Оформляем…' : 'Подтвердить заказ' }}
+            type="button"
+            :disabled="submitting || !checkoutReady"
+            @click="startYandexCheckout"
+          ) {{ submitting ? 'Открываем Яндекс…' : 'Перейти к оформлению' }}
+
+          p.checkout-page__hint(v-if="!checkoutReady")
+            | Для редиректа нужны ключи Яндекс Пэй в окружении.
 
           NuxtLink.checkout-page__back(to="/cart") Вернуться в корзину
 </template>
@@ -348,6 +197,15 @@ async function onSubmit() {
     margin: 0.45rem 0 0;
     color: $color-ink-55;
     font-size: 0.98rem;
+  }
+
+  &__banner {
+    margin-bottom: 1.25rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.85rem;
+    background: $color-paper;
+    border: 1px solid $color-ink-10;
+    font-size: 0.92rem;
   }
 
   &__empty {
@@ -443,7 +301,7 @@ async function onSubmit() {
   }
 
   &__free,
-  &__pvz {
+  &__hint {
     margin: 0;
     font-size: 0.82rem;
     line-height: 1.4;
@@ -503,11 +361,6 @@ async function onSubmit() {
   }
 }
 
-.checkout-fields {
-  display: grid;
-  gap: 0.85rem;
-}
-
 .checkout-field {
   display: grid;
   gap: 0.35rem;
@@ -520,7 +373,6 @@ async function onSubmit() {
     color: $color-ink-55;
   }
 
-  &__input,
   &__textarea {
     width: 100%;
     box-sizing: border-box;
@@ -530,64 +382,15 @@ async function onSubmit() {
     background: $color-white;
     font: inherit;
     font-size: 0.95rem;
+    resize: vertical;
+    min-height: 5rem;
 
     &:focus {
       outline: 2px solid $color-gold;
       outline-offset: 1px;
       border-color: transparent;
     }
-
-    &[aria-invalid='true'] {
-      border-color: #8a3a32;
-    }
   }
-
-  &__textarea {
-    resize: vertical;
-    min-height: 5rem;
-  }
-
-  &__error {
-    margin: 0;
-    font-size: 0.8rem;
-    color: #8a3a32;
-  }
-}
-
-.checkout-options {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.checkout-option {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid $color-ink-10;
-  border-radius: 0.85rem;
-  background: $color-white;
-  cursor: pointer;
-
-  &--active {
-    border-color: $color-gold;
-  }
-
-  &__input {
-    margin-top: 0.2rem;
-    accent-color: $color-gold;
-  }
-
-  &__title {
-    font-size: 0.95rem;
-    font-weight: 600;
-  }
-}
-
-.checkout-online-note {
-  margin: 0;
-  font-size: 0.88rem;
-  color: $color-ink-55;
 }
 
 .checkout-summary-list {

@@ -38,17 +38,28 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    // Серверные секреты (не попадают в клиент)
-    cdekAccount: '',
-    cdekSecurePassword: '',
-    yandexDeliveryToken: '',
     yandexOauthClientId: '',
     yandexOauthClientSecret: '',
-    // Публичные настройки виджетов / порогов
+    yandexPayMerchantId: '',
+    yandexPayApiKey: '',
+    yandexPaySandbox: true,
+    yandexPayMethods: 'CARD,SPLIT',
+    /** НДС для чека: 1 = 20%, 6 = не облагается. */
+    yandexPayReceiptTax: 6,
+    yandexWarehouseLocality: 'Москва',
+    yandexWarehouseRegion: 'Москва',
+    yandexWarehouseZip: '',
+    yandexWarehouseStreet: '',
+    yandexWarehouseBuilding: '',
+    yandexWarehouseAddressLine: '',
+    yandexWarehousePhone: '',
+    yandexWarehouseContactName: 'Цитадель',
+    yandexWarehouseEmail: '',
     public: {
+      siteUrl: '',
       freeDeliveryMinCents: 800_000,
-      yandexMapsApiKey: '',
-      cdekWidgetServiceUrl: '/api/delivery/cdek-proxy',
+      yandexPayMerchantId: '',
+      yandexPaySandbox: true,
       yandexOauthClientId: ''
     }
   }
