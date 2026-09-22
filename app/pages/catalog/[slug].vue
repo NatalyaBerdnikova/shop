@@ -3,6 +3,7 @@ import { getCatalogProductBySlug } from '~/data/catalog'
 
 const route = useRoute()
 const cart = useCartStore()
+const wishlist = useWishlistStore()
 const quantity = ref(1)
 const activeImageIndex = ref(0)
 
@@ -15,6 +16,10 @@ if (!product.value) {
     statusMessage: 'Товар не найден'
   })
 }
+
+const inWishlist = computed(() =>
+  product.value ? wishlist.has(product.value.id) : false
+)
 
 const activeImage = computed(
   () => product.value?.images[activeImageIndex.value] ?? product.value?.images[0] ?? ''
@@ -38,6 +43,19 @@ function addToCart() {
     unitPriceCents: product.value.priceCents,
     quantity: quantity.value,
     imageUrl: product.value.images[0]
+  })
+}
+
+function toggleWishlist() {
+  if (!product.value) return
+  wishlist.toggle({
+    id: product.value.id,
+    productId: product.value.id,
+    slug: product.value.slug,
+    title: product.value.title,
+    unitPriceCents: product.value.priceCents,
+    imageUrl: product.value.images[0],
+    category: product.value.category
   })
 }
 
@@ -113,6 +131,12 @@ main.product-page
               @click="quantity += 1"
             ) +
           button.product-page__add-btn(type="button" @click="addToCart") Добавить в корзину
+          button.product-page__wish-btn(
+            type="button"
+            :class="{ 'product-page__wish-btn--active': inWishlist }"
+            :aria-pressed="inWishlist"
+            @click="toggleWishlist"
+          ) {{ inWishlist ? 'В избранном' : 'В избранное' }}
 </template>
 
 <style scoped lang="scss">
@@ -253,6 +277,21 @@ main.product-page
     height: 2.2rem;
     padding-inline: 1rem;
     cursor: pointer;
+  }
+
+  &__wish-btn {
+    border: 1px solid $color-ink-12;
+    border-radius: 999px;
+    background: $color-paper;
+    color: $color-ink;
+    height: 2.2rem;
+    padding-inline: 1rem;
+    cursor: pointer;
+
+    &--active {
+      border-color: $color-gold;
+      color: $color-gold;
+    }
   }
 }
 

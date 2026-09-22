@@ -23,14 +23,47 @@ const {
 })
 
 useHead(() => ({
-  title: order.value ? `Заказ ${order.value.id}` : 'Заказ',
+  title: order.value ? `Заказ ${order.value.id} оформлен` : 'Заказ оформлен',
   meta: [
     {
       name: 'description',
-      content: 'Подтверждение заказа в ювелирной мастерской amateru.st.'
+      content: 'Подтверждение заказа в amateru.st: номер, состав и статус.'
     }
   ]
 }))
+
+const isFailed = computed(
+  () => payQuery.value === 'error' || order.value?.status === 'failed'
+)
+
+const isPlaced = computed(() => {
+  if (!order.value || isFailed.value) return false
+  return (
+    order.value.status === 'paid' ||
+    order.value.status === 'pending' ||
+    payQuery.value === 'success'
+  )
+})
+
+const pageTitle = computed(() => {
+  if (isFailed.value) return 'Оплата не завершена'
+  if (isPlaced.value) return 'Заказ оформлен'
+  return ORDER_STATUS_LABELS[order.value?.status ?? 'checkout']
+})
+
+const lead = computed(() => {
+  if (!order.value) return ''
+  if (order.value.status === 'paid') {
+    return 'Спасибо. Мы соберём заказ и передадим его в доставку.'
+  }
+  if (isFailed.value) {
+    return 'Оплата не прошла. Можно вернуться к оформлению и попробовать снова.'
+  }
+  if (isPlaced.value) {
+    return 'Сохраните номер заказа — по нему можно уточнить статус.'
+  }
+  return 'Завершите доставку и оплату в чекауте Яндекса.'
+})
 
 const createdLabel = computed(() => {
   if (!order.value?.createdAt) return ''
@@ -40,35 +73,43 @@ const createdLabel = computed(() => {
   }).format(new Date(order.value.createdAt))
 })
 
-const eyebrow = computed(() => {
-  if (payQuery.value === 'error' || order.value?.status === 'failed') {
-    return 'Оплата не завершена'
-  }
-  if (order.value?.status === 'paid') return 'Заказ оплачен'
-  if (order.value?.status === 'pending' || payQuery.value === 'success') {
-    return 'Заказ оформлен'
-  }
-  return ORDER_STATUS_LABELS[order.value?.status ?? 'checkout']
+const itemsCountLabel = computed(() => {
+  const n = order.value?.lines.reduce((sum, line) => sum + line.quantity, 0) ?? 0
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 14) return `${n} товаров`
+  if (mod10 === 1) return `${n} товар`
+  if (mod10 >= 2 && mod10 <= 4) return `${n} товара`
+  return `${n} товаров`
 })
 
-const lead = computed(() => {
+const paymentLabel = computed(() => {
   if (!order.value) return ''
-  if (order.value.status === 'paid') {
-    return 'Спасибо. Мы соберём заказ и передадим его в доставку.'
-  }
-  if (payQuery.value === 'error' || order.value.status === 'failed') {
-    return 'Оплата не прошла. Можно вернуться в корзину и оформить заказ снова.'
-  }
-  if (payQuery.value === 'success' || order.value.status === 'pending') {
-    return 'Если оплата уже прошла, статус обновится автоматически. Это может занять несколько секунд.'
-  }
-  return 'Оформите доставку и оплату в чекауте Яндекса.'
+  return (
+    YANDEX_PAYMENT_STATUS_LABELS[order.value.paymentStatus || ''] ||
+    ORDER_STATUS_LABELS[order.value.status]
+  )
+})
+
+const deliverySummary = computed(() => {
+  if (!order.value) return ''
+  const label = deliveryLabel(order.value.delivery)
+  const place =
+    order.value.delivery?.pickupPointName || order.value.delivery?.address
+  return place ? `${label} · ${place}` : label
+})
+
+const showResumeCheckout = computed(() => {
+  if (!order.value?.paymentUrl) return false
+  return (
+    order.value.status === 'checkout' ||
+    order.value.status === 'pending' ||
+    order.value.status === 'failed'
+  )
 })
 
 onMounted(async () => {
-  if (payQuery.value === 'success') {
-    cart.clear()
-  }
+  if (payQuery.value === 'success') cart.clear()
   if (payQuery.value !== 'success' && payQuery.value !== 'error') return
   try {
     await $fetch(`/api/orders/${orderId.value}/sync`, { method: 'POST' })
@@ -81,99 +122,90 @@ onMounted(async () => {
 </script>
 
 <template lang="pug">
-.order-page
+.order-done
   .container
-    .order-page__loading(v-if="pending")
+    .order-done__loading(v-if="pending")
       p Загружаем заказ…
 
-    .order-page__missing(v-else-if="error || !order")
-      h1.order-page__title Заказ не найден
-      p.order-page__lead Возможно, ссылка устарела или номер указан неверно.
-      NuxtLink.order-page__cta(to="/catalog") В каталог
+    .order-done__missing(v-else-if="error || !order")
+      p.order-done__eyebrow Заказ
+      h1.order-done__title Заказ не найден
+      p.order-done__lead Возможно, ссылка устарела или номер указан неверно.
+      NuxtLink.order-done__cta(to="/catalog") В каталог
 
     template(v-else)
-      nav.order-page__breadcrumbs(aria-label="Хлебные крошки")
-        NuxtLink.order-page__crumb(to="/catalog") Каталог
-        span.order-page__crumb-sep /
-        span.order-page__crumb-current Заказ {{ order.id }}
+      nav.order-done__breadcrumbs(aria-label="Хлебные крошки")
+        NuxtLink.order-done__crumb(to="/catalog") Каталог
+        span.order-done__crumb-sep /
+        span.order-done__crumb-current {{ order.id }}
 
-      header.order-page__header
-        p.order-page__eyebrow {{ eyebrow }}
-        h1.order-page__title {{ order.id }}
-        p.order-page__lead {{ lead }}
-        p.order-page__meta {{ createdLabel }}
+      header.order-done__header
+        p.order-done__eyebrow(
+          :class="{ 'order-done__eyebrow--alert': isFailed }"
+        ) {{ pageTitle }}
+        h1.order-done__title Номер заказа
+        p.order-done__number {{ order.id }}
+        p.order-done__lead {{ lead }}
+        p.order-done__meta(v-if="createdLabel") {{ createdLabel }}
 
-      .order-page__layout
-        section.order-page__panel
-          h2.order-page__panel-title Состав
-          ul.order-lines
-            li.order-line(v-for="line in order.lines" :key="line.id")
-              .order-line__media
-                img.order-line__image(
-                  v-if="line.imageUrl"
-                  :src="line.imageUrl"
-                  :alt="line.title"
-                  width="72"
-                  height="90"
-                  loading="lazy"
-                )
-              .order-line__body
-                p.order-line__title {{ line.title }}
-                p.order-line__meta {{ line.quantity }} × {{ formatRubFromCents(line.unitPriceCents) }}
-              p.order-line__total {{ formatRubFromCents(line.unitPriceCents * line.quantity) }}
+      .order-done__summary
+        h2.order-done__summary-title Краткое резюме
+        dl.order-done__facts
+          .order-done__fact
+            dt Статус
+            dd {{ paymentLabel }}
+          .order-done__fact
+            dt Состав
+            dd {{ itemsCountLabel }}
+          .order-done__fact
+            dt Доставка
+            dd {{ deliverySummary }}
+          .order-done__fact(
+            v-if="order.contact?.name || order.contact?.phone || order.contact?.email"
+          )
+            dt Получатель
+            dd
+              template(v-if="order.contact.name") {{ order.contact.name }}
+              template(v-if="order.contact.phone")
+                br
+                | {{ order.contact.phone }}
+              template(v-if="order.contact.email")
+                br
+                | {{ order.contact.email }}
+          .order-done__fact(v-if="order.comment")
+            dt Комментарий
+            dd {{ order.comment }}
 
-        aside.order-page__aside
-          section.order-page__panel
-            h2.order-page__panel-title Детали
-            dl.order-facts
-              .order-facts__row(v-if="order.contact?.name || order.contact?.phone || order.contact?.email")
-                dt Контакты
-                dd
-                  template(v-if="order.contact.name") {{ order.contact.name }}
-                    br
-                  template(v-if="order.contact.phone") {{ order.contact.phone }}
-                    br
-                  template(v-if="order.contact.email") {{ order.contact.email }}
-              .order-facts__row
-                dt Доставка
-                dd
-                  | {{ deliveryLabel(order.delivery) }}
-                  template(v-if="order.delivery?.pickupPointName || order.delivery?.address")
-                    br
-                    | {{ order.delivery.pickupPointName || order.delivery.address }}
-              .order-facts__row
-                dt Оплата
-                dd
-                  | {{ YANDEX_PAYMENT_STATUS_LABELS[order.paymentStatus || ''] || ORDER_STATUS_LABELS[order.status] }}
-                  template(v-if="order.paymentMethod")
-                    br
-                    | {{ order.paymentMethod }}
-              .order-facts__row(v-if="order.comment")
-                dt Комментарий
-                dd {{ order.comment }}
+        ul.order-done__lines(aria-label="Товары в заказе")
+          li.order-done__line(v-for="line in order.lines" :key="line.id")
+            span.order-done__line-title {{ line.title }}
+            span.order-done__line-meta ×{{ line.quantity }}
+            span.order-done__line-price {{ formatRubFromCents(line.unitPriceCents * line.quantity) }}
 
-          section.order-page__panel.order-page__panel--totals
-            .order-totals__row
-              span Товары
-              span {{ formatRubFromCents(order.subtotalCents) }}
-            .order-totals__row
-              span Доставка
-              span {{ order.deliveryCents === 0 ? 'В чекауте Яндекса' : formatRubFromCents(order.deliveryCents) }}
-            .order-totals__row.order-totals__row--total
-              span Итого
-              strong {{ formatRubFromCents(order.totalCents) }}
+        .order-done__totals
+          .order-done__totals-row
+            span Товары
+            span {{ formatRubFromCents(order.subtotalCents) }}
+          .order-done__totals-row
+            span Доставка
+            span {{ order.deliveryCents === 0 ? 'Считает Яндекс' : formatRubFromCents(order.deliveryCents) }}
+          .order-done__totals-row.order-done__totals-row--total
+            span Итого
+            strong {{ formatRubFromCents(order.totalCents) }}
 
-          a.order-page__cta(
-            v-if="order.paymentUrl && (order.status === 'checkout' || order.status === 'pending' || order.status === 'failed')"
-            :href="order.paymentUrl"
-          ) Вернуться в чекаут Яндекса
-          NuxtLink.order-page__cta(v-else to="/catalog") Продолжить покупки
+      .order-done__actions
+        a.order-done__cta(
+          v-if="showResumeCheckout"
+          :href="order.paymentUrl"
+        ) Вернуться в чекаут Яндекса
+        NuxtLink.order-done__cta(v-else to="/catalog") Продолжить покупки
+        NuxtLink.order-done__secondary(to="/cart") В корзину
 </template>
 
 <style scoped lang="scss">
 @use '~/assets/styles/variables' as *;
 
-.order-page {
+.order-done {
   padding-block: clamp(1.3rem, 3vw, 2.2rem) clamp(2.5rem, 5vw, 4rem);
 
   &__breadcrumbs {
@@ -194,37 +226,55 @@ onMounted(async () => {
     }
   }
 
+  &__crumb-sep {
+    opacity: 0.55;
+  }
+
   &__header {
-    margin-bottom: clamp(1.25rem, 3vw, 2rem);
-    max-width: 40rem;
+    max-width: 36rem;
+    margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
   }
 
   &__eyebrow {
-    margin: 0 0 0.4rem;
+    margin: 0 0 0.45rem;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: $color-gold;
+
+    &--alert {
+      color: #8a3a32;
+    }
   }
 
   &__title {
     margin: 0;
-    font-size: clamp(1.75rem, 4vw, 2.4rem);
+    font-size: clamp(1.15rem, 2.5vw, 1.35rem);
     font-weight: 600;
     letter-spacing: 0.02em;
-    line-height: 1.15;
-  }
-
-  &__lead {
-    margin: 0.7rem 0 0;
-    font-size: 1.05rem;
-    line-height: 1.5;
     color: $color-ink-55;
   }
 
+  &__number {
+    margin: 0.35rem 0 0;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    color: $color-ink;
+  }
+
+  &__lead {
+    margin: 0.85rem 0 0;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: $color-ink-55;
+    max-width: 36ch;
+  }
+
   &__meta {
-    margin: 0.45rem 0 0;
+    margin: 0.5rem 0 0;
     font-size: 0.88rem;
     color: $color-ink-55;
   }
@@ -232,36 +282,117 @@ onMounted(async () => {
   &__loading,
   &__missing {
     padding-block: clamp(2rem, 6vw, 4rem);
+    max-width: 28rem;
   }
 
-  &__layout {
+  &__summary {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 22rem);
-    gap: clamp(1.25rem, 3vw, 2rem);
-    align-items: start;
-  }
-
-  &__aside {
-    display: grid;
-    gap: 1rem;
-  }
-
-  &__panel {
-    display: grid;
-    gap: 0.9rem;
-    padding: 1.2rem 1.3rem;
+    gap: 1.1rem;
+    max-width: 36rem;
+    padding: 1.3rem 1.4rem 1.45rem;
     border: 1px solid $color-ink-10;
     border-radius: 1rem;
     background: $color-white;
   }
 
-  &__panel-title {
+  &__summary-title {
     margin: 0;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: $color-ink-55;
+  }
+
+  &__facts {
+    margin: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  &__fact {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+
+    dt {
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: $color-ink-55;
+      padding-top: 0.1rem;
+    }
+
+    dd {
+      margin: 0;
+      line-height: 1.45;
+      font-size: 0.98rem;
+    }
+  }
+
+  &__lines {
+    margin: 0;
+    padding: 0.85rem 0 0;
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+    border-top: 1px solid $color-ink-8;
+  }
+
+  &__line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  &__line-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__line-meta {
+    color: $color-ink-55;
+  }
+
+  &__line-price {
+    font-weight: 600;
+  }
+
+  &__totals {
+    display: grid;
+    gap: 0.45rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid $color-ink-8;
+  }
+
+  &__totals-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.95rem;
+    color: $color-ink-55;
+
+    &--total {
+      padding-top: 0.45rem;
+      margin-top: 0.15rem;
+      border-top: 1px solid $color-ink-8;
+      color: $color-ink;
+
+      strong {
+        font-size: 1.2rem;
+      }
+    }
+  }
+
+  &__actions {
+    margin-top: 1.35rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.1rem;
+    align-items: center;
   }
 
   &__cta {
@@ -275,101 +406,24 @@ onMounted(async () => {
     color: $color-white;
     text-decoration: none;
     font-size: 0.9rem;
-  }
-}
-
-.order-lines {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.85rem;
-}
-
-.order-line {
-  display: grid;
-  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
-  gap: 0.85rem;
-  align-items: center;
-
-  &__media {
-    overflow: hidden;
-    border-radius: 0.55rem;
-    border: 1px solid $color-ink-10;
-    aspect-ratio: 4 / 5;
-    background: $color-paper;
+    letter-spacing: 0.03em;
   }
 
-  &__image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  &__title {
-    margin: 0;
-    font-weight: 600;
-  }
-
-  &__meta {
-    margin: 0.25rem 0 0;
-    font-size: 0.82rem;
+  &__secondary {
+    font-size: 0.9rem;
     color: $color-ink-55;
-  }
+    text-decoration: none;
 
-  &__total {
-    margin: 0;
-    font-weight: 600;
-  }
-}
-
-.order-facts {
-  margin: 0;
-  display: grid;
-  gap: 0.85rem;
-
-  &__row {
-    display: grid;
-    gap: 0.25rem;
-
-    dt {
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: $color-ink-55;
-    }
-
-    dd {
-      margin: 0;
-      line-height: 1.45;
+    &:hover {
+      color: $color-gold;
     }
   }
 }
 
-.order-totals {
-  &__row {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    color: $color-ink-55;
-
-    &--total {
-      padding-top: 0.55rem;
-      margin-top: 0.25rem;
-      border-top: 1px solid $color-ink-8;
-      color: $color-ink;
-
-      strong {
-        font-size: 1.2rem;
-      }
-    }
-  }
-}
-
-@media (width <= 850px) {
-  .order-page__layout {
+@media (width <= 560px) {
+  .order-done__fact {
     grid-template-columns: 1fr;
+    gap: 0.2rem;
   }
 }
 </style>

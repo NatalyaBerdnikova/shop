@@ -2,6 +2,7 @@
 import { primaryNavLinks } from '~/data/navigation'
 
 const cart = useCartStore()
+const wishlist = useWishlistStore()
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
@@ -120,6 +121,13 @@ header.site-header(role="banner")
         ) Войти
 
         NuxtLink.site-header__cart(
+          to="/wishlist"
+          aria-label="Избранное"
+        )
+          span.site-header__cart-label Избранное
+          span.site-header__cart-badge(v-if="wishlist.count > 0" aria-hidden="true") {{ wishlist.count }}
+
+        NuxtLink.site-header__cart(
           to="/cart"
           aria-label="Корзина"
         )
@@ -180,6 +188,10 @@ header.site-header(role="banner")
         type="button"
         @click="openLogin"
       ) Войти через Яндекс ID
+
+    NuxtLink.site-header__drawer-cart(to="/wishlist" @click="closeMenu")
+      | Избранное
+      template(v-if="wishlist.count > 0") &nbsp;({{ wishlist.count }})
 
     NuxtLink.site-header__drawer-cart(to="/cart" @click="closeMenu")
       | Корзина

@@ -6,6 +6,7 @@ const props = defineProps<{
 }>()
 
 const cart = useCartStore()
+const wishlist = useWishlistStore()
 const quantity = ref(1)
 const isHovered = ref(false)
 const activeImageIndex = ref(0)
@@ -13,6 +14,8 @@ const activeImageIndex = ref(0)
 const activeImage = computed(
   () => props.product.images[activeImageIndex.value] ?? props.product.images[0]
 )
+
+const inWishlist = computed(() => wishlist.has(props.product.id))
 
 const formattedPrice = computed(() =>
   new Intl.NumberFormat('ru-RU', {
@@ -54,6 +57,15 @@ function addToCart() {
 function onWishlistClick(e: Event) {
   e.preventDefault()
   e.stopPropagation()
+  wishlist.toggle({
+    id: props.product.id,
+    productId: props.product.id,
+    slug: props.product.slug,
+    title: props.product.title,
+    unitPriceCents: props.product.priceCents,
+    imageUrl: props.product.images[0],
+    category: props.product.category
+  })
 }
 </script>
 
@@ -78,7 +90,9 @@ article.catalog-card(
     .catalog-card__floating-actions
       button.catalog-card__fab(
         type="button"
-        aria-label="В избранное"
+        :class="{ 'catalog-card__fab--active': inWishlist }"
+        :aria-label="inWishlist ? 'Убрать из избранного' : 'В избранное'"
+        :aria-pressed="inWishlist"
         @click="onWishlistClick"
       )
         svg.catalog-card__fab-icon(
@@ -86,7 +100,7 @@ article.catalog-card(
           width="18"
           height="18"
           viewBox="0 0 24 24"
-          fill="none"
+          :fill="inWishlist ? 'currentColor' : 'none'"
           stroke="currentColor"
           stroke-width="1.75"
           stroke-linecap="round"
@@ -234,6 +248,15 @@ article.catalog-card(
 
     &:hover {
       background: $color-ink;
+      color: $color-white;
+    }
+
+    &--active {
+      color: $color-gold;
+    }
+
+    &--active:hover {
+      background: $color-gold;
       color: $color-white;
     }
 

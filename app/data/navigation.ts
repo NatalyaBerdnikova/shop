@@ -14,6 +14,7 @@ export const primaryNavLinks: NavLink[] = [
 ]
 
 export const footerServiceLinks: NavLink[] = [
+  { label: 'Избранное', to: '/wishlist' },
   { label: 'Доставка и оплата', to: '/delivery' },
   { label: 'Уход за изделиями', to: '/care' },
   { label: 'Возврат', to: '/return' }
