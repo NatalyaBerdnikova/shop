@@ -46,7 +46,7 @@ useHead(() => ({
   meta: [
     {
       name: 'description',
-      content: product.value?.description ?? 'Страница товара в каталоге Цитадель.'
+      content: product.value?.description ?? 'Страница товара в каталоге amateru.st.'
     }
   ]
 }))

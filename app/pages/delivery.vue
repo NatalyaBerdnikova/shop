@@ -1,21 +1,11 @@
 <script setup lang="ts">
-import { formatRubFromCents } from '~/utils/formatMoney'
-import { FREE_DELIVERY_MIN_CENTS } from '~~/types/order'
-
-const config = useRuntimeConfig()
-const freeFrom = computed(() =>
-  formatRubFromCents(
-    Number(config.public.freeDeliveryMinCents) || FREE_DELIVERY_MIN_CENTS
-  )
-)
-
 useHead({
   title: 'Доставка и оплата',
   meta: [
     {
       name: 'description',
       content:
-        'Доставка украшений Цитадель по России: Яндекс Доставка и СДЭК через чекаут Яндекса. Оплата картой, СБП и Сплитом.'
+        'Доставка украшений amateru.st по России: Яндекс Доставка и СДЭК через чекаут Яндекса. Оплата картой, СБП и Сплитом.'
     }
   ]
 })
@@ -49,7 +39,7 @@ useHead({
         p.delivery-block__text
           | Стоимость и срок считает Яндекс после выбора города и способа доставки.
         p.delivery-block__text
-          | Для заказов от {{ freeFrom }} доставка бесплатная — этот порог должен совпадать с настройкой в кабинете Яндекс Пэй / KIT.
+          | Доставка всегда платная.
 
       section.delivery-block
         h2.delivery-block__title Оплата

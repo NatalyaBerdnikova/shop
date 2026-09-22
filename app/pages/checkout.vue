@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { formatRubFromCents } from '~/utils/formatMoney'
-import { FREE_DELIVERY_MIN_CENTS } from '~~/types/order'
 
 const cart = useCartStore()
 const route = useRoute()
@@ -12,7 +11,7 @@ useHead({
     {
       name: 'description',
       content:
-        'Оформление заказа в Цитадель через чекаут Яндекса: Яндекс Доставка, СДЭК и оплата.'
+        'Оформление заказа в amateru.st через чекаут Яндекса: Яндекс Доставка, СДЭК и оплата.'
     }
   ]
 })
@@ -23,12 +22,6 @@ const submitting = ref(false)
 
 const aborted = computed(() => route.query.pay === 'abort')
 const checkoutReady = computed(() => Boolean(config.public.yandexPayMerchantId))
-const freeDeliveryMinCents = computed(
-  () => Number(config.public.freeDeliveryMinCents) || FREE_DELIVERY_MIN_CENTS
-)
-const remainingToFree = computed(() =>
-  Math.max(0, freeDeliveryMinCents.value - cart.subtotalCents)
-)
 
 async function startYandexCheckout() {
   submitError.value = ''
@@ -138,10 +131,6 @@ async function startYandexCheckout() {
             .checkout-page__summary-row.checkout-page__summary-row--total
               span Товары к оплате
               strong {{ formatRubFromCents(cart.subtotalCents) }}
-
-          p.checkout-page__free(v-if="remainingToFree > 0")
-            | До бесплатной доставки осталось {{ formatRubFromCents(remainingToFree) }}
-          p.checkout-page__free(v-else) Порог бесплатной доставки уже выполнен
 
           p.checkout-page__submit-error(v-if="submitError" role="alert") {{ submitError }}
 
@@ -300,7 +289,6 @@ async function startYandexCheckout() {
     }
   }
 
-  &__free,
   &__hint {
     margin: 0;
     font-size: 0.82rem;

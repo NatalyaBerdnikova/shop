@@ -3,29 +3,27 @@ import {
   catalogProducts,
   categorySlugSet
 } from '~/data/catalog'
+import {
+  CATALOG_SORT_OPTIONS,
+  DEFAULT_CATALOG_SORT,
+  catalogSortQueryParam,
+  parseCatalogSort,
+  sortCatalogProducts,
+  type CatalogSortValue
+} from '#shared/catalogSort'
 
 useHead({
   title: 'Каталог',
   meta: [
     {
       name: 'description',
-      content: 'Каталог украшений Цитадель: кольца, подвески, серьги, браслеты и другие коллекции.'
+      content: 'Каталог украшений amateru.st: кольца, подвески, серьги, браслеты и другие коллекции.'
     }
   ]
 })
 
 const route = useRoute()
 const router = useRouter()
-
-const SORT_VALUES = ['new', 'price-asc', 'price-desc'] as const
-type SortValue = (typeof SORT_VALUES)[number]
-
-const DEFAULT_SORT: SortValue = 'new'
-
-function parseSort(value: unknown): SortValue {
-  const v = typeof value === 'string' ? value : ''
-  return SORT_VALUES.includes(v as SortValue) ? (v as SortValue) : DEFAULT_SORT
-}
 
 function parseCatParam(value: unknown): string[] {
   if (value == null || value === '') return []
@@ -51,7 +49,7 @@ const searchInput = ref('')
 const searchQuery = ref('')
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
-const sort = ref<SortValue>(DEFAULT_SORT)
+const sort = ref<CatalogSortValue>(DEFAULT_CATALOG_SORT)
 
 const selectedCategorySlugs = ref<string[]>([])
 
@@ -75,7 +73,7 @@ function syncQueryToUrl() {
   if (selectedCategorySlugs.value.length) {
     query.cat = [...selectedCategorySlugs.value].sort().join(',')
   }
-  if (sort.value !== DEFAULT_SORT) {
+  if (catalogSortQueryParam(sort.value)) {
     query.sort = sort.value
   }
   router.replace({ path: route.path, query })
@@ -86,7 +84,7 @@ function applyRouteQuery() {
   searchInput.value = q
   searchQuery.value = q.trim()
   selectedCategorySlugs.value = filterValidSlugs(parseCatParam(route.query.cat))
-  sort.value = parseSort(route.query.sort)
+  sort.value = parseCatalogSort(route.query.sort)
 }
 
 watch(
@@ -112,7 +110,7 @@ function onSearchBlur() {
   syncQueryToUrl()
 }
 
-function setSort(value: SortValue) {
+function setSort(value: CatalogSortValue) {
   sort.value = value
   syncQueryToUrl()
 }
@@ -144,18 +142,7 @@ const filteredProducts = computed(() => {
     list = list.filter((p) => p.title.toLowerCase().includes(q))
   }
 
-  if (sort.value === 'price-asc') {
-    list.sort((a, b) => a.priceCents - b.priceCents)
-  } else if (sort.value === 'price-desc') {
-    list.sort((a, b) => b.priceCents - a.priceCents)
-  } else {
-    list.sort(
-      (a, b) =>
-        new Date(b.releasedAt).getTime() - new Date(a.releasedAt).getTime()
-    )
-  }
-
-  return list
+  return sortCatalogProducts(list, sort.value)
 })
 
 watch(isFilterOpen, (open) => {
@@ -177,7 +164,7 @@ main.catalog-page
     .catalog-page__top
       .catalog-page__title-wrap
         p.catalog-page__eyebrow Каталог
-        h1.catalog-page__title Украшения Цитадель
+        h1.catalog-page__title Украшения amateru.st
         p.catalog-page__subtitle
           | Выберите категорию и добавьте товары в корзину прямо из каталога.
       button.catalog-page__filter-btn(
@@ -203,20 +190,13 @@ main.catalog-page
         span.catalog-page__sort-label Сортировка
         .catalog-page__sort-buttons
           button.catalog-page__sort-btn(
+            v-for="option in CATALOG_SORT_OPTIONS"
+            :key="option.value"
             type="button"
-            :class="{ 'catalog-page__sort-btn--active': sort === 'new' }"
-            @click="setSort('new')"
-          ) По новизне
-          button.catalog-page__sort-btn(
-            type="button"
-            :class="{ 'catalog-page__sort-btn--active': sort === 'price-asc' }"
-            @click="setSort('price-asc')"
-          ) Цена ↑
-          button.catalog-page__sort-btn(
-            type="button"
-            :class="{ 'catalog-page__sort-btn--active': sort === 'price-desc' }"
-            @click="setSort('price-desc')"
-          ) Цена ↓
+            :class="{ 'catalog-page__sort-btn--active': sort === option.value }"
+            :aria-pressed="sort === option.value"
+            @click="setSort(option.value)"
+          ) {{ option.label }}
 
     p.catalog-page__result
       | Найдено товаров: {{ filteredProducts.length }}

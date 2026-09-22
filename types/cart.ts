@@ -17,7 +17,7 @@ export type CartLineInput = Omit<CartLine, 'quantity'> & {
   quantity?: number
 }
 
-export const CART_STORAGE_KEY = 'citadel:cart:v1'
+export const CART_STORAGE_KEY = 'amateru:cart:v1'
 
 export interface CartPersistedState {
   version: 1

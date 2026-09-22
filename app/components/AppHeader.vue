@@ -85,7 +85,7 @@ header.site-header(role="banner")
   .site-header__bar
     .container.site-header__inner
       NuxtLink.site-header__logo(to="/" @click="closeMenu")
-        span.site-header__brand Цитадель
+        span.site-header__brand amateru.st
         span.site-header__tagline Ювелирная мастерская
 
       nav.site-header__nav.site-header__nav--desktop(aria-label="Основное меню")

@@ -1,5 +1,5 @@
 <template lang="pug">
-section.brand-marquee(aria-label="Анонс: Цитадель, новый дроп на сайте")
+section.brand-marquee(aria-label="Анонс: amateru.st, новый дроп на сайте")
   .brand-marquee__viewport
     .brand-marquee__track
       .brand-marquee__group(
@@ -9,7 +9,7 @@ section.brand-marquee(aria-label="Анонс: Цитадель, новый др�
       )
         template(v-for="i in 10" :key="`${group}-${i}`")
           span.brand-marquee__chunk
-            strong.brand-marquee__brand Цитадель
+            strong.brand-marquee__brand amateru.st
             span.brand-marquee__msg  новый дроп уже на сайте
             span.brand-marquee__sep(aria-hidden="true") ·
 </template>

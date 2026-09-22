@@ -1,8 +1,5 @@
 import type { CartLine } from './cart'
 
-/** Бесплатная доставка от суммы заказа. Порог на сайте — для подсказки; фактический считается в кабинете Яндекса. */
-export const FREE_DELIVERY_MIN_CENTS = 800_000
-
 export const ORDER_STATUSES = [
   'checkout',
   'pending',

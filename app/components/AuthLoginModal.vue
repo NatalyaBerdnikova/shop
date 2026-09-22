@@ -77,7 +77,7 @@ Teleport(to="body")
         ) ×
 
         p.auth-modal__eyebrow Аккаунт
-        h2.auth-modal__title(:id="titleId") Вход в Цитадель
+        h2.auth-modal__title(:id="titleId") Вход в amateru.st
         p.auth-modal__text
           | Войдите через Яндекс ID — подтянем имя, фамилию, телефон, почту
           | и дату рождения, если вы разрешите доступ.

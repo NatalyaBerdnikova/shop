@@ -98,7 +98,7 @@ export function warehouseForRender() {
       addressLine: config.yandexWarehouseAddressLine || ''
     },
     contact: {
-      firstName: config.yandexWarehouseContactName || 'Цитадель',
+      firstName: config.yandexWarehouseContactName || 'amateru.st',
       phone: config.yandexWarehousePhone || '',
       email: config.yandexWarehouseEmail || ''
     }

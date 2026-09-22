@@ -16,7 +16,7 @@ footer.site-footer(role="contentinfo")
   .site-footer__main
     .container.site-footer__grid
       .site-footer__brand-block
-        NuxtLink.site-footer__logo(to="/") Цитадель
+        NuxtLink.site-footer__logo(to="/") amateru.st
         p.site-footer__about
           | Украшения из полимерной смолы: кольца, подвески, серьги и браслеты.
           | Ручная работа и внимание к деталям.
@@ -49,7 +49,7 @@ footer.site-footer(role="contentinfo")
 
   .site-footer__bottom
     .container.site-footer__bottom-inner
-      p.site-footer__copy © {{ new Date().getFullYear() }} Цитадель. Все права защищены.
+      p.site-footer__copy © {{ new Date().getFullYear() }} amateru.st. Все права защищены.
       p.site-footer__legal
         NuxtLink.site-footer__mini-link(to="/privacy") Политика конфиденциальности
         span.site-footer__dot(aria-hidden="true") ·
