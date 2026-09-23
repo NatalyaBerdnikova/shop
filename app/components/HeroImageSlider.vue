@@ -89,35 +89,13 @@ section.hero(
         :loading="current === 0 ? 'eager' : 'lazy'"
         sizes="100vw"
       )
-  .hero__scrim(aria-hidden="true")
-  .hero__content
-    Transition(name="hero-text" mode="out-in")
-      .hero__text(
-        v-if="currentSlide"
-        :key="currentSlide.src"
-      )
-        h1.hero__title {{ currentSlide.headline }}
-        p.hero__tagline(v-if="currentSlide.tagline") {{ currentSlide.tagline }}
   .hero__live(
     :id="liveId"
     aria-live="polite"
     aria-atomic="true"
   )
     template(v-if="currentSlide")
-      | Слайд {{ current + 1 }} из {{ slides.length }}: {{ currentSlide.headline }}
-  .hero__controls(v-if="slides.length > 1")
-    button.hero__btn.hero__btn--prev(
-      type="button"
-      aria-label="Предыдущий слайд"
-      @click="go(-1)"
-    )
-      span.hero__chevron(aria-hidden="true") ‹
-    button.hero__btn.hero__btn--next(
-      type="button"
-      aria-label="Следующий слайд"
-      @click="go(1)"
-    )
-      span.hero__chevron(aria-hidden="true") ›
+      | Слайд {{ current + 1 }} из {{ slides.length }}
   .hero__dots(
     v-if="slides.length > 1"
     role="tablist"
@@ -146,9 +124,6 @@ section.hero(
   max-width: 2000px;
   margin-inline: auto;
   height: min(88vh, 400px);
-  display: flex;
-  align-items: flex-end;
-  color: $color-paper;
   overflow: hidden;
   background: $color-bg-dark;
 
@@ -167,44 +142,6 @@ section.hero(
     object-position: center;
   }
 
-  &__scrim {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(
-      180deg,
-      rgb(15 15 16 / 35%) 0%,
-      rgb(15 15 16 / 55%) 45%,
-      rgb(15 15 16 / 88%) 100%
-    );
-    pointer-events: none;
-  }
-
-  &__content {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    max-width: 720px;
-    padding: clamp(1.5rem, 4vw, 3.5rem);
-    padding-bottom: clamp(4rem, 12vw, 6rem);
-  }
-
-  &__title {
-    margin: 0;
-    font-size: clamp(1.85rem, 5vw, 3.25rem);
-    font-weight: 650;
-    letter-spacing: -0.02em;
-    line-height: 1.12;
-  }
-
-  &__tagline {
-    margin: 0.85rem 0 0;
-    font-size: clamp(1rem, 2.2vw, 1.2rem);
-    line-height: 1.45;
-    opacity: 0.92;
-    max-width: 36ch;
-  }
-
   &__live {
     position: absolute;
     width: 1px;
@@ -215,55 +152,6 @@ section.hero(
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-  }
-
-  &__controls {
-    position: absolute;
-    z-index: 3;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  &__btn {
-    pointer-events: auto;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 2.75rem;
-    height: 2.75rem;
-    border: none;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 14%);
-    color: $color-white;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    backdrop-filter: blur(8px);
-    transition: background 0.2s ease, transform 0.2s ease;
-
-    &:hover {
-      background: rgb(255 255 255 / 24%);
-    }
-
-    &:focus-visible {
-      outline: 2px solid $color-white;
-      outline-offset: 3px;
-    }
-
-    &--prev {
-      left: clamp(0.75rem, 3vw, 1.5rem);
-    }
-
-    &--next {
-      right: clamp(0.75rem, 3vw, 1.5rem);
-    }
-  }
-
-  &__chevron {
-    font-size: 1.75rem;
-    line-height: 1;
-    font-weight: 300;
-    margin-top: -0.15em;
   }
 
   &__dots {
@@ -319,28 +207,10 @@ section.hero(
   opacity: 0;
 }
 
-.hero-text-enter-active,
-.hero-text-leave-active {
-  transition: opacity 0.45s ease, transform 0.45s ease;
-}
-
-.hero-text-enter-from,
-.hero-text-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .hero-fade-enter-active,
-  .hero-fade-leave-active,
-  .hero-text-enter-active,
-  .hero-text-leave-active {
+  .hero-fade-leave-active {
     transition: none;
-  }
-
-  .hero-text-enter-from,
-  .hero-text-leave-to {
-    transform: none;
   }
 }
 </style>

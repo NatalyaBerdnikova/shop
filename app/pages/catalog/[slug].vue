@@ -13,7 +13,8 @@ const product = computed(() => getCatalogProductBySlug(slug.value))
 if (!product.value) {
   throw createError({
     statusCode: 404,
-    statusMessage: 'Товар не найден'
+    statusMessage: 'Товар не найден',
+    fatal: true
   })
 }
 

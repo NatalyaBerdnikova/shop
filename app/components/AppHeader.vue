@@ -85,9 +85,7 @@ onUnmounted(() => {
 header.site-header(role="banner")
   .site-header__bar
     .container.site-header__inner
-      NuxtLink.site-header__logo(to="/" @click="closeMenu")
-        span.site-header__brand amateru.st
-        span.site-header__tagline Ювелирная мастерская
+      NuxtLink.site-header__logo(to="/" @click="closeMenu") amateru.st
 
       nav.site-header__nav.site-header__nav--desktop(aria-label="Основное меню")
         NuxtLink.site-header__link(
@@ -98,14 +96,29 @@ header.site-header(role="banner")
 
       .site-header__actions
         .site-header__account(v-if="auth.isLoggedIn")
-          button.site-header__account-btn(
+          button.site-header__icon-btn(
             type="button"
             :aria-expanded="accountMenuOpen"
             aria-haspopup="true"
+            :aria-label="auth.fullName || 'Аккаунт'"
             @click="accountMenuOpen = !accountMenuOpen"
           )
-            span.site-header__account-label {{ auth.fullName || 'Аккаунт' }}
+            svg.site-header__icon(
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            )
+              path(d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2")
+              circle(cx="12" cy="7" r="4")
           .site-header__account-menu(v-if="accountMenuOpen")
+            p.site-header__account-meta(v-if="auth.fullName") {{ auth.fullName }}
             p.site-header__account-meta(v-if="auth.user?.email") {{ auth.user.email }}
             p.site-header__account-meta(v-if="auth.user?.phone") {{ auth.user.phone }}
             p.site-header__account-meta(v-if="auth.user?.birthday") {{ auth.user.birthday }}
@@ -114,25 +127,66 @@ header.site-header(role="banner")
               @click="logout"
             ) Выйти
 
-        button.site-header__login(
+        button.site-header__icon-btn(
           v-else
           type="button"
+          aria-label="Войти"
           @click="openLogin"
-        ) Войти
+        )
+          svg.site-header__icon(
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          )
+            path(d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2")
+            circle(cx="12" cy="7" r="4")
 
-        NuxtLink.site-header__cart(
+        NuxtLink.site-header__icon-link(
           to="/wishlist"
           aria-label="Избранное"
         )
-          span.site-header__cart-label Избранное
-          span.site-header__cart-badge(v-if="wishlist.count > 0" aria-hidden="true") {{ wishlist.count }}
+          svg.site-header__icon(
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          )
+            path(d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z")
+          span.site-header__icon-badge(v-if="wishlist.count > 0" aria-hidden="true") {{ wishlist.count }}
 
-        NuxtLink.site-header__cart(
+        NuxtLink.site-header__icon-link(
           to="/cart"
           aria-label="Корзина"
         )
-          span.site-header__cart-label Корзина
-          span.site-header__cart-badge(v-if="cart.totalQuantity > 0" aria-hidden="true") {{ cart.totalQuantity }}
+          svg.site-header__icon(
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          )
+            path(d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z")
+            line(x1="3" y1="6" x2="21" y2="6")
+            path(d="M16 10a4 4 0 0 1-8 0")
+          span.site-header__icon-badge(v-if="cart.totalQuantity > 0" aria-hidden="true") {{ cart.totalQuantity }}
 
         button.site-header__burger(
           type="button"
@@ -225,31 +279,20 @@ $bp-nav: 1024px;
   }
 
   &__logo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
     color: inherit;
     flex-shrink: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
 
     &:focus-visible {
       outline: 2px solid $color-gold;
       outline-offset: 4px;
     }
-  }
-
-  &__brand {
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  &__tagline {
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: $color-ink-55;
   }
 
   &__nav--desktop {
@@ -291,48 +334,11 @@ $bp-nav: 1024px;
   &__actions {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-  }
-
-  &__login,
-  &__account-btn {
-    display: inline-flex;
-    align-items: center;
-    height: 2.3rem;
-    padding: 0 0.8rem;
-    border-radius: 999px;
-    border: 1px solid $color-ink-12;
-    background: transparent;
-    color: $color-ink;
-    font: inherit;
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-
-    &:hover {
-      border-color: $color-gold;
-      color: $color-gold;
-    }
-
-    &:focus-visible {
-      outline: 2px solid $color-gold;
-      outline-offset: 2px;
-    }
+    gap: 0.45rem;
   }
 
   &__account {
     position: relative;
-  }
-
-  &__account-label {
-    max-width: 9rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    @media (max-width: #{$bp-nav - 1px}) {
-      max-width: 5.5rem;
-    }
   }
 
   &__account-menu {
@@ -373,17 +379,21 @@ $bp-nav: 1024px;
     }
   }
 
-  &__cart {
+  &__icon-btn,
+  &__icon-link {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    font-size: 0.875rem;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    color: $color-ink;
-    padding: 0.45rem 0.65rem;
+    justify-content: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    padding: 0;
     border-radius: 999px;
     border: 1px solid $color-ink-12;
+    background: transparent;
+    color: $color-ink;
+    text-decoration: none;
+    cursor: pointer;
     transition:
       border-color 0.2s ease,
       color 0.2s ease;
@@ -399,27 +409,21 @@ $bp-nav: 1024px;
     }
   }
 
-  &__cart-label {
-    @media (max-width: #{$bp-nav - 1px}) {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
+  &__icon {
+    display: block;
+    flex-shrink: 0;
   }
 
-  &__cart-badge {
-    min-width: 1.25rem;
-    height: 1.25rem;
-    padding: 0 0.35rem;
-    font-size: 0.7rem;
+  &__icon-badge {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.35rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.28rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    line-height: 1.25rem;
+    line-height: 1.1rem;
     text-align: center;
     color: $color-white;
     background: $color-gold;

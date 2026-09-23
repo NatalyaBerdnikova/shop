@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import {
-  footerServiceLinks,
-  primaryNavLinks
-} from '~/data/navigation'
-
-const catalogLinks = computed(() =>
-  primaryNavLinks.filter(
-    (l) => l.to !== '/' && l.to !== '/contacts'
-  )
-)
+import { footerServiceLinks } from '~/data/navigation'
 </script>
 
 <template lang="pug">
@@ -22,17 +13,8 @@ footer.site-footer(role="contentinfo")
           | Ручная работа и внимание к деталям.
 
       .site-footer__col
-        h2.site-footer__heading Каталог
-        nav.site-footer__nav(aria-label="Каталог в подвале")
-          NuxtLink.site-footer__link(
-            v-for="link in catalogLinks"
-            :key="link.to"
-            :to="link.to"
-          ) {{ link.label }}
-
-      .site-footer__col
         h2.site-footer__heading Покупателям
-        nav.site-footer__nav(aria-label="Сервис")
+        nav.site-footer__nav(aria-label="Покупателям")
           NuxtLink.site-footer__link(
             v-for="link in footerServiceLinks"
             :key="link.to"
@@ -73,13 +55,7 @@ footer.site-footer(role="contentinfo")
     gap: clamp(2rem, 4vw, 3rem);
 
     @media (min-width: 640px) {
-      grid-template-columns: 1.4fr 1fr 1fr 1fr;
-    }
-  }
-
-  &__brand-block {
-    @media (min-width: 640px) {
-      grid-column: span 1;
+      grid-template-columns: 1.6fr 1fr 1fr;
     }
   }
 
@@ -88,8 +64,7 @@ footer.site-footer(role="contentinfo")
     margin-bottom: 1rem;
     font-size: 1.1rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
     text-decoration: none;
     color: $color-paper;
 
@@ -147,7 +122,6 @@ footer.site-footer(role="contentinfo")
     font-size: 0.9rem;
     font-style: normal;
     line-height: 1.6;
-    color: $color-ink-58;
 
     p {
       margin: 0 0 0.5rem;
@@ -155,7 +129,7 @@ footer.site-footer(role="contentinfo")
   }
 
   &__contact-link {
-    color: inherit;
+    color: $color-white;
     text-decoration: none;
 
     &:hover {

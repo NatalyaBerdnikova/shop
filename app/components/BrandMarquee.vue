@@ -51,8 +51,7 @@ section.brand-marquee(aria-label="Анонс: amateru.st, новый дроп н
   &__brand {
     font-size: 0.8rem;
     font-weight: 650;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: $color-gold;
   }
 
