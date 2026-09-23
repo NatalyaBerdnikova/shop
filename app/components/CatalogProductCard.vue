@@ -7,9 +7,10 @@ const props = defineProps<{
 
 const cart = useCartStore()
 const wishlist = useWishlistStore()
-const quantity = ref(1)
 const isHovered = ref(false)
 const activeImageIndex = ref(0)
+
+const productHref = computed(() => `/catalog/${props.product.slug}`)
 
 const activeImage = computed(
   () => props.product.images[activeImageIndex.value] ?? props.product.images[0]
@@ -49,7 +50,7 @@ function addToCart() {
     slug: props.product.slug,
     title: props.product.title,
     unitPriceCents: props.product.priceCents,
-    quantity: quantity.value,
+    quantity: 1,
     imageUrl: props.product.images[0]
   })
 }
@@ -75,18 +76,17 @@ article.catalog-card(
   @mouseenter="isHovered = true"
   @mouseleave="resetHoverState"
 )
-  .catalog-card__media(
-    @mousemove="setActiveByPointer"
-  )
-    responsive-image(
-      :src="activeImage"
-      :alt="product.title"
-      :width="900"
-      :height="1200"
-      loading="lazy"
-      :unsplash="true"
-      img-class="catalog-card__image"
-    )
+  .catalog-card__media(@mousemove="setActiveByPointer")
+    NuxtLink.catalog-card__media-link(:to="productHref" :aria-label="product.title")
+      responsive-image(
+        :src="activeImage"
+        :alt="product.title"
+        :width="900"
+        :height="1200"
+        loading="lazy"
+        :unsplash="true"
+        img-class="catalog-card__image"
+      )
     .catalog-card__floating-actions
       button.catalog-card__fab(
         type="button"
@@ -108,11 +108,23 @@ article.catalog-card(
           aria-hidden="true"
         )
           path(d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z")
-      NuxtLink.catalog-card__fab(
-        :to="`/catalog/${product.slug}`"
-        aria-label="Быстрый просмотр"
+    .catalog-card__steps(v-if="product.images.length > 1" aria-hidden="true")
+      span.catalog-card__step(
+        v-for="(_, i) in product.images"
+        :key="`${product.id}-step-${i}`"
+        :class="{ 'catalog-card__step--active': i === activeImageIndex }"
       )
-        svg.catalog-card__fab-icon(
+
+  .catalog-card__body
+    .catalog-card__title-row
+      h3.catalog-card__title
+        NuxtLink.catalog-card__title-link(:to="productHref") {{ product.title }}
+      button.catalog-card__cart-btn(
+        type="button"
+        aria-label="В корзину"
+        @click="addToCart"
+      )
+        svg.catalog-card__cart-icon(
           xmlns="http://www.w3.org/2000/svg"
           width="18"
           height="18"
@@ -124,53 +136,10 @@ article.catalog-card(
           stroke-linejoin="round"
           aria-hidden="true"
         )
-          path(d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z")
-          circle(cx="12" cy="12" r="3")
-    .catalog-card__steps(v-if="product.images.length > 1" aria-hidden="true")
-      span.catalog-card__step(
-        v-for="(_, i) in product.images"
-        :key="`${product.id}-step-${i}`"
-        :class="{ 'catalog-card__step--active': i === activeImageIndex }"
-      )
-
-  .catalog-card__body
-    .catalog-card__stars(role="img" aria-label="Рейтинг не указан")
-      svg.catalog-card__star(
-        v-for="n in 5"
-        :key="`${product.id}-star-${n}`"
-        xmlns="http://www.w3.org/2000/svg"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.4"
-        aria-hidden="true"
-      )
-        path(d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z")
-    p.catalog-card__meta {{ product.category }} · {{ product.material }}
-    h3.catalog-card__title
-      NuxtLink.catalog-card__title-link(:to="`/catalog/${product.slug}`") {{ product.title }}
+          path(d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z")
+          line(x1="3" y1="6" x2="21" y2="6")
+          path(d="M16 10a4 4 0 0 1-8 0")
     p.catalog-card__price {{ formattedPrice }}
-
-  .catalog-card__footer
-    .catalog-card__qty
-      button.catalog-card__qty-btn(
-        type="button"
-        aria-label="Уменьшить количество"
-        :disabled="quantity <= 1"
-        @click="quantity = Math.max(1, quantity - 1)"
-      ) –
-      output.catalog-card__qty-value {{ quantity }}
-      button.catalog-card__qty-btn(
-        type="button"
-        aria-label="Увеличить количество"
-        @click="quantity += 1"
-      ) +
-    button.catalog-card__add-btn(
-      type="button"
-      @click="addToCart"
-    ) В корзину
 </template>
 
 <style scoped lang="scss">
@@ -178,35 +147,39 @@ article.catalog-card(
 
 .catalog-card {
   position: relative;
-  z-index: 1;
   border-radius: 0.95rem;
   border: 1px solid $color-ink-10;
   background: $color-white;
-  overflow: visible;
+  overflow: hidden;
   transition:
     box-shadow 0.2s ease,
-    transform 0.2s ease,
-    z-index 0s linear 0.2s;
+    transform 0.2s ease;
 
   &--hover {
-    z-index: 10;
     transform: translateY(-4px);
     box-shadow:
       0 4px 6px rgb(26 25 24 / 4%),
       0 12px 24px rgb(26 25 24 / 10%),
       0 24px 48px rgb(26 25 24 / 8%);
-    transition:
-      box-shadow 0.2s ease,
-      transform 0.2s ease,
-      z-index 0s linear 0s;
   }
 
   &__media {
     position: relative;
     aspect-ratio: 3 / 4;
     background: rgb(26 25 24 / 3%);
-    border-radius: 0.95rem 0.95rem 0 0;
-    overflow: hidden;
+  }
+
+  &__media-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: -2px;
+    }
   }
 
   &__image {
@@ -223,9 +196,6 @@ article.catalog-card(
     top: 0.65rem;
     right: 0.65rem;
     z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
   }
 
   &__fab {
@@ -241,7 +211,6 @@ article.catalog-card(
     color: $color-ink;
     box-shadow: 0 2px 10px rgb(26 25 24 / 12%);
     cursor: pointer;
-    text-decoration: none;
     transition:
       background 0.15s ease,
       color 0.15s ease;
@@ -278,6 +247,7 @@ article.catalog-card(
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     gap: 0.35rem;
+    pointer-events: none;
   }
 
   &__step {
@@ -293,28 +263,16 @@ article.catalog-card(
     padding: 0.75rem 0.85rem 0.9rem;
   }
 
-  &__stars {
+  &__title-row {
     display: flex;
-    gap: 0.2rem;
-    margin-bottom: 0.35rem;
-    color: rgb(26 25 24 / 22%);
-  }
-
-  &__star {
-    flex-shrink: 0;
-    display: block;
-  }
-
-  &__meta {
-    margin: 0 0 0.25rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.04em;
-    line-height: 1.35;
-    color: $color-ink-55;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   &__title {
     margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 0.92rem;
     line-height: 1.25;
     font-weight: 700;
@@ -337,97 +295,67 @@ article.catalog-card(
     }
   }
 
+  &__cart-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    margin: -0.15rem -0.2rem 0 0;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: $color-ink;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(4px);
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease,
+      visibility 0.18s ease,
+      background 0.15s ease,
+      color 0.15s ease;
+
+    .catalog-card--hover & {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
+
+    &:hover {
+      background: $color-gold;
+      color: $color-white;
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      outline: 2px solid $color-gold;
+      outline-offset: 2px;
+    }
+  }
+
+  &__cart-icon {
+    display: block;
+  }
+
   &__price {
     margin: 0.4rem 0 0;
     font-size: 1.05rem;
     font-weight: 700;
     color: $color-ink;
   }
+}
 
-  &__footer {
-    position: absolute;
-    left: -1px;
-    right: -1px;
-    top: 100%;
-    margin-top: -1px;
-    display: flex;
-    min-height: 2.6rem;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(6px);
-    pointer-events: none;
-    transition:
-      opacity 0.2s ease,
-      transform 0.2s ease,
-      visibility 0.2s ease;
-    border-radius: 0 0 0.95rem 0.95rem;
-    overflow: hidden;
-    background: $color-white;
-    border: 1px solid $color-ink-10;
-    border-top: 1px solid $color-ink-8;
-    box-shadow: 0 16px 24px rgb(26 25 24 / 10%);
-
-    .catalog-card--hover & {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-  }
-
-  &__qty {
-    display: flex;
-    flex: 1 1 50%;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    min-width: 0;
-    background: rgb(26 25 24 / 5%);
-    border-right: 1px solid $color-ink-10;
-  }
-
-  &__qty-btn {
-    border: none;
-    background: transparent;
-    width: 2.25rem;
-    height: 100%;
-    min-height: 2.6rem;
-    cursor: pointer;
-    color: $color-ink;
-    font-size: 1rem;
-    line-height: 1;
-
-    &:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-  }
-
-  &__qty-value {
-    min-width: 1.5rem;
-    text-align: center;
-    font-size: 0.88rem;
-    font-weight: 600;
-  }
-
-  &__add-btn {
-    flex: 1 1 50%;
-    border: none;
-    margin: 0;
-    padding: 0 0.5rem;
-    min-height: 2.6rem;
-    background: $color-ink;
-    color: $color-white;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.15s ease;
-
-    &:hover {
-      background: #000;
-    }
+@media (hover: none) {
+  .catalog-card__cart-btn {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
   }
 }
 </style>

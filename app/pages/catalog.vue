@@ -161,42 +161,34 @@ onUnmounted(() => {
 <template lang="pug">
 main.catalog-page
   .container
-    .catalog-page__top
-      .catalog-page__title-wrap
-        p.catalog-page__eyebrow Каталог
-        h1.catalog-page__title Украшения amateru.st
-        p.catalog-page__subtitle
-          | Выберите категорию и добавьте товары в корзину прямо из каталога.
+    .catalog-page__toolbar
       button.catalog-page__filter-btn(
         type="button"
         @click="isFilterOpen = true"
       ) Фильтры
 
-    .catalog-page__toolbar
       label.catalog-page__search-label
-        span.catalog-page__search-hint Поиск по названию
         input.catalog-page__search-input(
           v-model="searchInput"
           type="search"
           name="q"
-          placeholder="Например, кольцо или Luna"
+          placeholder="Поиск по названию"
           autocomplete="off"
+          aria-label="Поиск по названию"
           @input="onSearchInput"
           @keydown.enter.prevent="onSearchBlur"
           @blur="onSearchBlur"
         )
 
-      .catalog-page__sort
-        span.catalog-page__sort-label Сортировка
-        .catalog-page__sort-buttons
-          button.catalog-page__sort-btn(
-            v-for="option in CATALOG_SORT_OPTIONS"
-            :key="option.value"
-            type="button"
-            :class="{ 'catalog-page__sort-btn--active': sort === option.value }"
-            :aria-pressed="sort === option.value"
-            @click="setSort(option.value)"
-          ) {{ option.label }}
+      .catalog-page__sort(role="group" aria-label="Сортировка")
+        button.catalog-page__sort-btn(
+          v-for="option in CATALOG_SORT_OPTIONS"
+          :key="option.value"
+          type="button"
+          :class="{ 'catalog-page__sort-btn--active': sort === option.value }"
+          :aria-pressed="sort === option.value"
+          @click="setSort(option.value)"
+        ) {{ option.label }}
 
     p.catalog-page__result
       | Найдено товаров: {{ filteredProducts.length }}
@@ -261,31 +253,12 @@ main.catalog-page
 .catalog-page {
   padding-block: clamp(1.4rem, 3vw, 2.3rem) clamp(2rem, 4vw, 3rem);
 
-  &__top {
+  &__toolbar {
     display: flex;
-    gap: 1rem;
-    align-items: end;
-    justify-content: space-between;
-    margin-bottom: 0.8rem;
-  }
-
-  &__eyebrow {
-    margin: 0;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: $color-ink-55;
-  }
-
-  &__title {
-    margin: 0.2rem 0 0;
-    font-size: clamp(1.5rem, 4vw, 2.2rem);
-    line-height: 1.15;
-  }
-
-  &__subtitle {
-    margin: 0.45rem 0 0;
-    color: $color-ink-55;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
   }
 
   &__filter-btn {
@@ -299,27 +272,9 @@ main.catalog-page
     flex-shrink: 0;
   }
 
-  &__toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: flex-end;
-    margin-bottom: 0.75rem;
-  }
-
   &__search-label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    flex: 1 1 16rem;
-    min-width: min(100%, 18rem);
-  }
-
-  &__search-hint {
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: $color-ink-55;
+    flex: 1 1 12rem;
+    min-width: min(100%, 10rem);
   }
 
   &__search-input {
@@ -340,22 +295,9 @@ main.catalog-page
 
   &__sort {
     display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    flex: 1 1 14rem;
-  }
-
-  &__sort-label {
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: $color-ink-55;
-  }
-
-  &__sort-buttons {
-    display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
+    flex-shrink: 0;
   }
 
   &__sort-btn {
@@ -374,7 +316,7 @@ main.catalog-page
 
     &--active {
       border-color: $color-gold;
-      background: rgb(154 123 79 / 12%);
+      background: rgb(77 14 18 / 10%);
       color: $color-ink;
     }
 

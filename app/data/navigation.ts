@@ -7,7 +7,6 @@ export interface NavLink {
 export const primaryNavLinks: NavLink[] = [
   { label: 'Каталог', to: '/catalog' },
   { label: 'Доставка и оплата', to: '/delivery' },
-  { label: 'Контакты', to: '/contacts' }
 ]
 
 export const footerServiceLinks: NavLink[] = [

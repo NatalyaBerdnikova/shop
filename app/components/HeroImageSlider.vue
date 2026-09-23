@@ -65,6 +65,41 @@ watch(
 )
 
 const currentSlide = computed(() => slides.value[current.value])
+
+const pointerStartX = ref<number | null>(null)
+const pointerDeltaX = ref(0)
+
+function onPointerDown(event: PointerEvent) {
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  pointerStartX.value = event.clientX
+  pointerDeltaX.value = 0
+  ;(event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId)
+}
+
+function onPointerMove(event: PointerEvent) {
+  if (pointerStartX.value == null) return
+  pointerDeltaX.value = event.clientX - pointerStartX.value
+}
+
+function onPointerUp(event: PointerEvent) {
+  if (pointerStartX.value == null) return
+  const delta = pointerDeltaX.value
+  pointerStartX.value = null
+  pointerDeltaX.value = 0
+  ;(event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(
+    event.pointerId
+  )
+
+  const threshold = 48
+  if (Math.abs(delta) < threshold) return
+  if (delta < 0) go(1)
+  else go(-1)
+  startAutoplay()
+}
+
+function onDragStart(event: DragEvent) {
+  event.preventDefault()
+}
 </script>
 
 <template lang="pug">
@@ -77,6 +112,10 @@ section.hero(
   @mouseleave="startAutoplay"
   @focusin="stopAutoplay"
   @focusout="startAutoplay"
+  @pointerdown="onPointerDown"
+  @pointermove="onPointerMove"
+  @pointerup="onPointerUp"
+  @pointercancel="onPointerUp"
 )
   .hero__media(aria-hidden="true")
     Transition(name="hero-fade")
@@ -88,6 +127,8 @@ section.hero(
         :fetchpriority="current === 0 ? 'high' : 'low'"
         :loading="current === 0 ? 'eager' : 'lazy'"
         sizes="100vw"
+        draggable="false"
+        @dragstart="onDragStart"
       )
   .hero__live(
     :id="liveId"
@@ -100,6 +141,7 @@ section.hero(
     v-if="slides.length > 1"
     role="tablist"
     aria-label="Выбор слайда"
+    @pointerdown.stop
   )
     button.hero__dot(
       v-for="(_, i) in slides"
@@ -126,6 +168,12 @@ section.hero(
   height: min(88vh, 400px);
   overflow: hidden;
   background: $color-bg-dark;
+  touch-action: pan-y;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
 
   &__media {
     position: absolute;
@@ -140,6 +188,9 @@ section.hero(
     height: 100%;
     object-fit: cover;
     object-position: center;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
   }
 
   &__live {

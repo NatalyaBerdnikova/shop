@@ -21,3 +21,8 @@ export function getCatalogProductBySlug(slug: string) {
 export function getCatalogProductById(id: string) {
   return catalogById.get(id)
 }
+
+/** Витрина «Самые популярные» — первые N позиций каталога (пока без метрик продаж). */
+export function getPopularProducts(limit = 10) {
+  return catalogProducts.slice(0, Math.max(0, limit))
+}
