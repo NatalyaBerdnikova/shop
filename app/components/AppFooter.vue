@@ -15,7 +15,7 @@ footer.site-footer(role="contentinfo")
       .site-footer__col
         h2.site-footer__heading Покупателям
         nav.site-footer__nav(aria-label="Покупателям")
-          NuxtLink.site-footer__link(
+          NuxtLink.site-footer__link.holographic-link(
             v-for="link in footerServiceLinks"
             :key="link.to"
             :to="link.to"
@@ -24,18 +24,18 @@ footer.site-footer(role="contentinfo")
       address.site-footer__col.site-footer__contacts
         h2.site-footer__heading Контакты
         p
-          a.site-footer__contact-link(href="tel:+78001234567") +7 (800) 123-45-67
+          a.site-footer__contact-link.holographic-link(href="tel:+78001234567") +7 (800) 123-45-67
         p
-          a.site-footer__contact-link(href="mailto:hello@siyanie.example") hello@siyanie.example
+          a.site-footer__contact-link.holographic-link(href="mailto:hello@siyanie.example") hello@siyanie.example
         p.site-footer__hours Ежедневно, 10:00–21:00
 
   .site-footer__bottom
     .container.site-footer__bottom-inner
       p.site-footer__copy © {{ new Date().getFullYear() }} amateru.st. Все права защищены.
       p.site-footer__legal
-        NuxtLink.site-footer__mini-link(to="/privacy") Политика конфиденциальности
+        NuxtLink.site-footer__mini-link.holographic-link(to="/privacy") Политика конфиденциальности
         span.site-footer__dot(aria-hidden="true") ·
-        NuxtLink.site-footer__mini-link(to="/offer") Публичная оферта
+        NuxtLink.site-footer__mini-link.holographic-link(to="/offer") Публичная оферта
 </template>
 
 <style scoped lang="scss">

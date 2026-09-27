@@ -126,8 +126,15 @@ function toggleCategory(slug: string) {
 
 function resetFilters() {
   selectedCategorySlugs.value = []
+  sort.value = DEFAULT_CATALOG_SORT
   syncQueryToUrl()
 }
+
+const hasActiveFilters = computed(
+  () =>
+    selectedCategorySlugs.value.length > 0 ||
+    sort.value !== DEFAULT_CATALOG_SORT
+)
 
 const filteredProducts = computed(() => {
   let list = [...catalogProducts]
@@ -162,11 +169,6 @@ onUnmounted(() => {
 main.catalog-page
   .container
     .catalog-page__toolbar
-      button.catalog-page__filter-btn(
-        type="button"
-        @click="isFilterOpen = true"
-      ) Фильтры
-
       label.catalog-page__search-label
         input.catalog-page__search-input(
           v-model="searchInput"
@@ -180,15 +182,28 @@ main.catalog-page
           @blur="onSearchBlur"
         )
 
-      .catalog-page__sort(role="group" aria-label="Сортировка")
-        button.catalog-page__sort-btn(
-          v-for="option in CATALOG_SORT_OPTIONS"
-          :key="option.value"
-          type="button"
-          :class="{ 'catalog-page__sort-btn--active': sort === option.value }"
-          :aria-pressed="sort === option.value"
-          @click="setSort(option.value)"
-        ) {{ option.label }}
+      button.catalog-page__filter-btn(
+        type="button"
+        :class="{ 'catalog-page__filter-btn--active': hasActiveFilters }"
+        aria-label="Фильтры и сортировка"
+        @click="isFilterOpen = true"
+      )
+        svg.catalog-page__filter-icon(
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        )
+          line(x1="4" y1="6" x2="20" y2="6")
+          line(x1="8" y1="12" x2="16" y2="12")
+          line(x1="11" y1="18" x2="13" y2="18")
+        span.catalog-page__filter-label Фильтры
 
     p.catalog-page__result
       | Найдено товаров: {{ filteredProducts.length }}
@@ -212,12 +227,12 @@ main.catalog-page
     :class="{ 'catalog-page__filters--open': isFilterOpen }"
     role="dialog"
     aria-modal="true"
-    aria-label="Фильтры по категориям"
+    aria-label="Фильтры и сортировка"
     :aria-hidden="!isFilterOpen"
     :inert="!isFilterOpen"
   )
     .catalog-page__filters-head
-      h2.catalog-page__filters-title Категории
+      h2.catalog-page__filters-title Фильтры
       button.catalog-page__filters-close(
         type="button"
         aria-label="Закрыть фильтры"
@@ -225,16 +240,30 @@ main.catalog-page
       ) ×
 
     .catalog-page__filters-body
-      label.catalog-page__check(
-        v-for="opt in categoryOptions"
-        :key="opt.slug"
-      )
-        input(
-          type="checkbox"
-          :checked="selectedCategorySlugs.includes(opt.slug)"
-          @change="toggleCategory(opt.slug)"
+      .catalog-page__filters-section
+        h3.catalog-page__filters-heading Сортировка
+        .catalog-page__sort(role="group" aria-label="Сортировка")
+          button.catalog-page__sort-btn(
+            v-for="option in CATALOG_SORT_OPTIONS"
+            :key="option.value"
+            type="button"
+            :class="{ 'catalog-page__sort-btn--active': sort === option.value }"
+            :aria-pressed="sort === option.value"
+            @click="setSort(option.value)"
+          ) {{ option.label }}
+
+      .catalog-page__filters-section
+        h3.catalog-page__filters-heading Категории
+        label.catalog-page__check(
+          v-for="opt in categoryOptions"
+          :key="opt.slug"
         )
-        span {{ opt.label }}
+          input(
+            type="checkbox"
+            :checked="selectedCategorySlugs.includes(opt.slug)"
+            @change="toggleCategory(opt.slug)"
+          )
+          span {{ opt.label }}
 
     .catalog-page__filters-actions
       button.catalog-page__filters-reset(
@@ -250,31 +279,21 @@ main.catalog-page
 <style scoped lang="scss">
 @use '~/assets/styles/variables' as *;
 
+$bp-toolbar: 768px;
+
 .catalog-page {
   padding-block: clamp(1.4rem, 3vw, 2.3rem) clamp(2rem, 4vw, 3rem);
 
   &__toolbar {
     display: flex;
-    flex-wrap: wrap;
     gap: 0.65rem;
     align-items: center;
     margin-bottom: 0.75rem;
   }
 
-  &__filter-btn {
-    border: 1px solid $color-ink-12;
-    background: $color-paper;
-    color: $color-ink;
-    border-radius: 999px;
-    height: 2.5rem;
-    padding-inline: 1rem;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
   &__search-label {
-    flex: 1 1 12rem;
-    min-width: min(100%, 10rem);
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   &__search-input {
@@ -293,11 +312,65 @@ main.catalog-page
     }
   }
 
+  &__filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
+    height: 2.5rem;
+    width: 2.5rem;
+    padding: 0;
+    border: 1px solid $color-ink-12;
+    border-radius: 999px;
+    background: $color-paper;
+    color: $color-ink;
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      background 0.15s ease;
+
+    @media (min-width: $bp-toolbar) {
+      width: auto;
+      padding-inline: 1rem;
+    }
+
+    &:hover {
+      border-color: $color-gold;
+      color: $color-gold;
+    }
+
+    &--active {
+      border-color: $color-gold;
+      color: $color-gold;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-gold;
+      outline-offset: 2px;
+    }
+  }
+
+  &__filter-icon {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  &__filter-label {
+    display: none;
+
+    @media (min-width: $bp-toolbar) {
+      display: inline;
+    }
+  }
+
   &__sort {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-    flex-shrink: 0;
   }
 
   &__sort-btn {
@@ -305,7 +378,7 @@ main.catalog-page
     background: $color-paper;
     color: $color-ink;
     border-radius: 999px;
-    height: 2.5rem;
+    height: 2.35rem;
     padding-inline: 0.85rem;
     font-size: 0.82rem;
     cursor: pointer;
@@ -316,7 +389,7 @@ main.catalog-page
 
     &--active {
       border-color: $color-gold;
-      background: rgb(77 14 18 / 10%);
+      background: rgb(26 25 24 / 8%);
       color: $color-ink;
     }
 
@@ -335,7 +408,15 @@ main.catalog-page
     display: grid;
     gap: 1rem;
     align-items: start;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+
+    @media (min-width: 480px) {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
   }
 
   &__overlay {
@@ -351,7 +432,7 @@ main.catalog-page
     z-index: 121;
     top: 0;
     left: 0;
-    width: min(24rem, 88vw);
+    width: min(24rem, 92vw);
     height: 100dvh;
     background: $color-paper;
     border-right: 1px solid $color-ink-10;
@@ -391,9 +472,23 @@ main.catalog-page
 
   &__filters-body {
     display: grid;
-    gap: 0.45rem;
+    gap: 1.35rem;
     padding: 1rem;
     overflow: auto;
+  }
+
+  &__filters-section {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  &__filters-heading {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $color-ink-55;
   }
 
   &__check {

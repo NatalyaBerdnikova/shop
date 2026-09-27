@@ -88,7 +88,7 @@ header.site-header(role="banner")
       NuxtLink.site-header__logo(to="/" @click="closeMenu") amateru.st
 
       nav.site-header__nav.site-header__nav--desktop(aria-label="Основное меню")
-        NuxtLink.site-header__link(
+        NuxtLink.site-header__link.holographic-link(
           v-for="link in primaryNavLinks"
           :key="link.to"
           :to="link.to"

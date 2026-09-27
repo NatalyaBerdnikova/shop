@@ -149,7 +149,7 @@ section.product-slider(v-if="products.length")
   }
 
   &__track-wrap {
-    // чтобы тень карточки при hover не обрезалась контейнером
+    /* чтобы тень карточки при hover не обрезалась контейнером */
     overflow: visible;
   }
 

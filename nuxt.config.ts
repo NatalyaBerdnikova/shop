@@ -88,7 +88,7 @@ export default defineNuxtConfig({
       checkboxDisabledCircleBackground: '#ffffff',
       checkboxInactiveBackground: '#1a1918',
       checkboxInactiveCircleBackground: '#ffffff',
-      controlButtonBackground: '#4d0e12',
+      controlButtonBackground: '#0f0f10',
       controlButtonHoverBackground: '#1a1918',
       controlButtonIconColor: '#ffffff',
       controlButtonIconHoverColor: '#ffffff',

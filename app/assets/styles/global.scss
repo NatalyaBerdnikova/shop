@@ -10,10 +10,107 @@ body {
 
 .cookieControl {
   a {
-    color: $color-gold;
+    color: $color-bg-dark;
   }
 
   &__Bar a:hover {
     color: $color-white;
+  }
+}
+
+.holographic-btn {
+  position: relative;
+  padding: 15px 35px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  background: #fff;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+/* Создаем голографический слой */
+.holographic-btn::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(120deg,
+      rgba(255, 0, 0, 0.4),
+      rgba(0, 255, 0, 0.4),
+      rgba(0, 0, 255, 0.4),
+      rgba(255, 0, 255, 0.4),
+      rgba(0, 255, 255, 0.4));
+  background-size: 300% 300%;
+  mix-blend-mode: overlay;
+  z-index: -1;
+  transition: 0.5s;
+  animation: holo-shift 6s ease infinite;
+}
+
+/* Эффект при наведении */
+.holographic-btn:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.holographic-btn:hover::before {
+  mix-blend-mode: normal;
+  opacity: 0.9;
+}
+
+/* Анимация переливов */
+@keyframes holo-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.holographic-link {
+  color: inherit;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  filter: none;
+  transition: filter 0.3s ease, transform 0.3s ease;
+  display: inline-block;
+}
+
+/* Перелив только при наведении */
+.holographic-link:hover {
+  background: linear-gradient(90deg,
+      #ff007f,
+      #7f00ff,
+      #00f0ff,
+      #00ff7f,
+      #ff007f);
+  background-size: 400% auto;
+  background-position: 0% center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.6)) drop-shadow(0 0 15px rgba(0, 240, 255, 0.6));
+  animation: holo-text-shift 3s linear infinite;
+}
+
+/* Анимация движения спектра */
+@keyframes holo-text-shift {
+  0% {
+    background-position: 0% center;
+  }
+
+  100% {
+    background-position: 400% center;
   }
 }

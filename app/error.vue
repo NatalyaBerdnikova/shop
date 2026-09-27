@@ -85,7 +85,7 @@ div
           h1.error-page__title {{ title }}
           p.error-page__lead {{ lead }}
           .error-page__actions
-            button.error-page__cta(
+            button.error-page__cta.holographic-btn(
               type="button"
               @click="goTo('/catalog')"
             ) В каталог
