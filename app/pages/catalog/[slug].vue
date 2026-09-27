@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { getCatalogProductBySlug } from '~/data/catalog'
+import {
+  buildProductJsonLd,
+  toAbsoluteUrl
+} from '~/utils/productJsonLd'
 
 const route = useRoute()
+const config = useRuntimeConfig()
 const cart = useCartStore()
 const wishlist = useWishlistStore()
 const quantity = ref(1)
@@ -23,7 +28,10 @@ const inWishlist = computed(() =>
 )
 
 const activeImage = computed(
-  () => product.value?.images[activeImageIndex.value] ?? product.value?.images[0] ?? ''
+  () =>
+    product.value?.images[activeImageIndex.value] ??
+    product.value?.images[0] ??
+    ''
 )
 
 const formattedPrice = computed(() =>
@@ -33,6 +41,39 @@ const formattedPrice = computed(() =>
     maximumFractionDigits: 0
   }).format((product.value?.priceCents ?? 0) / 100)
 )
+
+const requestUrl = useRequestURL()
+const siteUrl = computed(
+  () =>
+    (config.public.siteUrl as string)?.trim() ||
+    `${requestUrl.protocol}//${requestUrl.host}`
+)
+
+const productPath = computed(() => `/catalog/${slug.value}`)
+
+const productJsonLd = computed(() => {
+  if (!product.value) return null
+  return buildProductJsonLd({
+    product: product.value,
+    siteUrl: siteUrl.value,
+    path: productPath.value
+  })
+})
+
+const ogImage = computed(() => {
+  const src = product.value?.images[0]
+  if (!src) return ''
+  return toAbsoluteUrl(src, siteUrl.value)
+})
+
+function detailParts(detail: string) {
+  const sep = detail.indexOf(':')
+  if (sep <= 0) return { name: 'Характеристика', value: detail }
+  return {
+    name: detail.slice(0, sep).trim(),
+    value: detail.slice(sep + 1).trim()
+  }
+}
 
 function addToCart() {
   if (!product.value) return
@@ -60,24 +101,87 @@ function toggleWishlist() {
   })
 }
 
-useHead(() => ({
-  title: product.value ? `${product.value.title} - Каталог` : 'Товар',
-  meta: [
-    {
-      name: 'description',
-      content: product.value?.description ?? 'Страница товара в каталоге amateru.st.'
-    }
-  ]
-}))
+useSeoMeta({
+  title: () =>
+    product.value ? `${product.value.title} — amateru.st` : 'Товар',
+  description: () =>
+    product.value?.description ?? 'Страница товара в каталоге amateru.st.',
+  ogTitle: () => product.value?.title,
+  ogDescription: () => product.value?.description,
+  ogType: 'website',
+  ogUrl: () => toAbsoluteUrl(productPath.value, siteUrl.value),
+  ogImage: () => ogImage.value || undefined,
+  ogLocale: 'ru_RU',
+  ogSiteName: 'amateru.st',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => product.value?.title,
+  twitterDescription: () => product.value?.description,
+  twitterImage: () => ogImage.value || undefined
+})
+
+useHead(() => {
+  const p = product.value
+  const jsonLd = productJsonLd.value
+  if (!p || !jsonLd) return {}
+
+  const price = (p.priceCents / 100).toFixed(2)
+
+  return {
+    title: `${p.title} — amateru.st`,
+    link: [
+      {
+        rel: 'canonical',
+        href: toAbsoluteUrl(productPath.value, siteUrl.value)
+      }
+    ],
+    meta: [
+      { name: 'description', content: p.description },
+      { property: 'product:price:amount', content: price },
+      { property: 'product:price:currency', content: 'RUB' },
+      { property: 'product:brand', content: 'amateru.st' },
+      { property: 'product:availability', content: 'in stock' },
+      { property: 'product:condition', content: 'new' },
+      { name: 'robots', content: 'index, follow' }
+    ],
+    script: [
+      {
+        key: 'product-jsonld',
+        type: 'application/ld+json',
+        children: JSON.stringify(jsonLd)
+      }
+    ]
+  }
+})
 </script>
 
 <template lang="pug">
-main.product-page
-  .container(v-if="product")
-    nav.product-page__breadcrumbs(aria-label="Хлебные крошки")
-      NuxtLink.product-page__crumb(to="/catalog") Каталог
+main.product-page(
+  v-if="product"
+  itemscope
+  itemtype="https://schema.org/Product"
+)
+  .container
+    nav.product-page__breadcrumbs(
+      aria-label="Хлебные крошки"
+      itemscope
+      itemtype="https://schema.org/BreadcrumbList"
+    )
+      span(
+        itemprop="itemListElement"
+        itemscope
+        itemtype="https://schema.org/ListItem"
+      )
+        NuxtLink.product-page__crumb(itemprop="item" to="/catalog")
+          span(itemprop="name") Каталог
+        meta(itemprop="position" content="1")
       span.product-page__crumb-sep /
-      span.product-page__crumb-current {{ product.title }}
+      span(
+        itemprop="itemListElement"
+        itemscope
+        itemtype="https://schema.org/ListItem"
+      )
+        span.product-page__crumb-current(itemprop="name") {{ product.title }}
+        meta(itemprop="position" content="2")
 
     .product-page__layout
       section.product-page__gallery
@@ -89,6 +193,12 @@ main.product-page
           loading="eager"
           :unsplash="true"
           img-class="product-page__main-image"
+        )
+        meta(
+          v-for="(image, i) in product.images"
+          :key="`${product.id}-meta-img-${i}`"
+          itemprop="image"
+          :content="image"
         )
         .product-page__thumbs
           button.product-page__thumb(
@@ -109,13 +219,49 @@ main.product-page
             )
 
       section.product-page__info
-        p.product-page__meta {{ product.category }} · {{ product.material }}
-        h1.product-page__title {{ product.title }}
-        p.product-page__price {{ formattedPrice }}
-        p.product-page__description {{ product.description }}
+        meta(itemprop="sku" :content="product.id")
+        meta(itemprop="productID" :content="product.id")
+        link(itemprop="url" :href="productPath")
+
+        p.product-page__meta
+          span(itemprop="category") {{ product.category }}
+          |  ·
+          |
+          span(itemprop="material") {{ product.material }}
+        h1.product-page__title(itemprop="name") {{ product.title }}
+        p.product-page__price(
+          itemprop="offers"
+          itemscope
+          itemtype="https://schema.org/Offer"
+        )
+          meta(itemprop="priceCurrency" content="RUB")
+          meta(
+            itemprop="price"
+            :content="(product.priceCents / 100).toFixed(2)"
+          )
+          meta(
+            itemprop="availability"
+            content="https://schema.org/InStock"
+          )
+          meta(
+            itemprop="itemCondition"
+            content="https://schema.org/NewCondition"
+          )
+          link(itemprop="url" :href="productPath")
+          span {{ formattedPrice }}
+        p.product-page__description(itemprop="description") {{ product.description }}
 
         ul.product-page__details
-          li.product-page__detail(v-for="detail in product.details" :key="detail") {{ detail }}
+          li.product-page__detail(
+            v-for="detail in product.details"
+            :key="detail"
+            itemprop="additionalProperty"
+            itemscope
+            itemtype="https://schema.org/PropertyValue"
+          )
+            meta(:content="detailParts(detail).name" itemprop="name")
+            meta(:content="detailParts(detail).value" itemprop="value")
+            | {{ detail }}
 
         .product-page__buy
           .product-page__qty
