@@ -137,6 +137,8 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    /** PostgreSQL: NUXT_DATABASE_URL или DATABASE_URL */
+    databaseUrl: '',
     yandexOauthClientId: '',
     yandexOauthClientSecret: '',
     yandexPayMerchantId: '',

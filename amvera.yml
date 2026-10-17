@@ -1,0 +1,14 @@
+meta:
+  environment: nodejs
+  toolchain: npm # или yarn/pnpm
+build:
+  requirements:
+    - package.json
+  commands:
+    - npm install
+    - npm run build
+run:
+  command: node .output/server/index.mjs
+  persistence:
+    - mountPath: /app/public/uploads # Папка для картинок товаров
+      volumeName: my-shop-volume

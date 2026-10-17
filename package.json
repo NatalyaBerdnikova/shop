@@ -15,7 +15,13 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:unit": "vitest --project unit",
-    "test:nuxt": "vitest --project nuxt"
+    "test:nuxt": "vitest --project nuxt",
+    "db:up": "docker compose -f ../shop_DB/docker-compose.yml up -d",
+    "db:down": "docker compose -f ../shop_DB/docker-compose.yml down",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:check": "drizzle-kit check"
   },
   "dependencies": {
     "@artmizu/nuxt-prometheus": "^3.0.0",
@@ -29,9 +35,11 @@
     "@nuxt/test-utils": "^4.0.0",
     "@nuxtjs/svg-sprite": "^1.0.2",
     "@pinia/nuxt": "^0.11.3",
+    "drizzle-orm": "^0.45.3",
     "jose": "^6.2.12",
     "nuxt": "^4.4.2",
     "pinia": "^3.0.4",
+    "postgres": "^3.4.9",
     "vue": "^3.5.30",
     "vue-router": "^5.0.3"
   },
@@ -39,6 +47,8 @@
     "@vitest/coverage-v8": "^4.1.0",
     "@vue/language-plugin-pug": "^3.3.11",
     "@vue/test-utils": "^2.4.6",
+    "dotenv": "^18.0.4",
+    "drizzle-kit": "^0.31.11",
     "pug": "^3.0.4",
     "sass": "^1.98.0",
     "vitest": "^4.1.0"
