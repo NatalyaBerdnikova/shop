@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { staticPrerenderRoutes } from './shared/staticRoutes'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -55,6 +57,11 @@ export default defineNuxtConfig({
     '@dargmuesli/nuxt-cookie-control',
     '@nuxtjs/svg-sprite'
   ],
+
+  // Страница-список спрайта (`/_icons`) модулем задумана для dev и в статике не нужна.
+  svgSprite: {
+    iconsPath: false
+  },
 
   cookieControl: {
     barPosition: 'bottom-full',
@@ -128,12 +135,26 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    prerender: {
+      crawlLinks: true,
+      // Карточки товара и страницы меню пишутся в .output/public даже без обхода ссылок.
+      routes: [...staticPrerenderRoutes]
+    },
     storage: {
       orders: {
         driver: 'fs',
         base: './.data/orders'
       }
     }
+  },
+
+  routeRules: {
+    // Эти маршруты живут только в Nitro (`npm run build`). В статику их HTML не входит.
+    '/api/**': { prerender: false },
+    '/v1/**': { prerender: false },
+    '/metrics': { prerender: false },
+    '/health': { prerender: false },
+    '/order/**': { prerender: false }
   },
 
   runtimeConfig: {

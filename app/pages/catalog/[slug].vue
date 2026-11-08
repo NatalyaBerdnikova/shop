@@ -4,6 +4,7 @@ import {
   buildProductJsonLd,
   toAbsoluteUrl
 } from '~/utils/productJsonLd'
+import { resolvePublicSiteUrl } from '~/utils/siteUrl'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -43,13 +44,20 @@ const formattedPrice = computed(() =>
 )
 
 const requestUrl = useRequestURL()
-const siteUrl = computed(
-  () =>
-    (config.public.siteUrl as string)?.trim() ||
-    `${requestUrl.protocol}//${requestUrl.host}`
+const siteUrl = computed(() =>
+  resolvePublicSiteUrl(
+    config.public.siteUrl as string,
+    `${requestUrl.protocol}//${requestUrl.host}`,
+    import.meta.prerender
+  )
 )
 
 const productPath = computed(() => `/catalog/${slug.value}`)
+
+const absolutePageUrl = computed(() => {
+  const url = toAbsoluteUrl(productPath.value, siteUrl.value)
+  return /^https?:\/\//i.test(url) ? url : ''
+})
 
 const productJsonLd = computed(() => {
   if (!product.value) return null
@@ -109,7 +117,7 @@ useSeoMeta({
   ogTitle: () => product.value?.title,
   ogDescription: () => product.value?.description,
   ogType: 'website',
-  ogUrl: () => toAbsoluteUrl(productPath.value, siteUrl.value),
+  ogUrl: () => absolutePageUrl.value || undefined,
   ogImage: () => ogImage.value || undefined,
   ogLocale: 'ru_RU',
   ogSiteName: 'amateru.st',
@@ -128,12 +136,14 @@ useHead(() => {
 
   return {
     title: `${p.title} — amateru.st`,
-    link: [
-      {
-        rel: 'canonical',
-        href: toAbsoluteUrl(productPath.value, siteUrl.value)
-      }
-    ],
+    link: absolutePageUrl.value
+      ? [
+          {
+            rel: 'canonical',
+            href: absolutePageUrl.value
+          }
+        ]
+      : [],
     meta: [
       { name: 'description', content: p.description },
       { property: 'product:price:amount', content: price },
