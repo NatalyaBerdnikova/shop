@@ -1,3 +1,5 @@
+# Режим Node/Nitro, не статика. Витрина без сервера: npm run generate, каталог .output/public.
+# См. README.md. Команда ниже нужна для API: вход, оплата, заказы, /metrics.
 meta:
   environment: nodejs
   toolchain: npm # или yarn/pnpm

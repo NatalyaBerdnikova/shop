@@ -9,6 +9,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "verify:static": "node scripts/verify-static-output.mjs",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest",

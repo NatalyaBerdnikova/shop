@@ -15,3 +15,8 @@ export const footerServiceLinks: NavLink[] = [
   { label: 'Доставка и оплата', to: '/delivery' },
   { label: 'Возврат', to: '/return' }
 ]
+
+export const footerLegalLinks: NavLink[] = [
+  { label: 'Политика конфиденциальности', to: '/privacy' },
+  { label: 'Публичная оферта', to: '/offer' }
+]
