@@ -8,16 +8,6 @@ body {
   color: $color-ink;
 }
 
-.cookieControl {
-  a {
-    color: $color-bg-dark;
-  }
-
-  &__Bar a:hover {
-    color: $color-white;
-  }
-}
-
 .holographic-btn {
   position: relative;
   padding: 15px 35px;

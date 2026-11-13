@@ -11,7 +11,6 @@ section.brand-marquee(aria-label="Анонс: amateru.st, новый дроп н
           span.brand-marquee__chunk
             strong.brand-marquee__brand amateru.st
             span.brand-marquee__msg  новый дроп уже на сайте
-            span.brand-marquee__sep(aria-hidden="true") ·
 </template>
 
 <style scoped lang="scss">

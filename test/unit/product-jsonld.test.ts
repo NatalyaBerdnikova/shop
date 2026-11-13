@@ -3,47 +3,48 @@ import { buildProductJsonLd } from '../../app/utils/productJsonLd'
 import type { CatalogProduct } from '../../app/data/catalog.types'
 
 const sample: CatalogProduct = {
-  id: 'ring-aurora',
-  slug: 'ring-aurora',
-  title: 'Кольцо Aurora',
-  categorySlug: 'rings',
-  category: 'Кольца',
-  material: 'Серебро 925',
-  priceCents: 129900,
-  releasedAt: '2025-11-02',
-  images: [
-    'https://images.unsplash.com/photo-1',
-    '/decor/cover.png'
-  ],
-  description: 'Минималистичное кольцо.',
-  details: ['Вес: 4.1 г', 'Ручная полировка'],
-  weightGrams: 120
+  id: 'strawberry-glass',
+  slug: 'klubnika-v-stekle',
+  title: 'Клубника в стекле',
+  categorySlug: 'desserts',
+  category: 'Десерты',
+  priceCents: null,
+  releasedAt: '2026-11-09',
+  images: ['/decor/cover.png'],
+  description: 'Клубника в стекле — сладкий подарок.',
+  details: ['Формат: стекло']
 }
 
 describe('buildProductJsonLd', () => {
-  it('maps product fields into Schema.org Product graph', () => {
+  it('maps product fields into Schema.org Product graph without required price', () => {
     const json = buildProductJsonLd({
       product: sample,
       siteUrl: 'https://amateru.st',
-      path: '/catalog/ring-aurora'
+      path: '/catalog/klubnika-v-stekle'
     })
 
     const product = (json['@graph'] as Array<Record<string, unknown>>).find(
       (n) => n['@type'] === 'Product'
     )
 
-    expect(product?.name).toBe('Кольцо Aurora')
-    expect(product?.sku).toBe('ring-aurora')
-    expect(product?.material).toBe('Серебро 925')
-    expect((product?.offers as { price: string }).price).toBe('1299.00')
-    expect(product?.image).toEqual([
-      'https://images.unsplash.com/photo-1',
-      'https://amateru.st/decor/cover.png'
-    ])
-    expect(product?.weight).toEqual({
-      '@type': 'QuantitativeValue',
-      value: 120,
-      unitCode: 'GRM'
+    expect(product?.name).toBe('Клубника в стекле')
+    expect(product?.sku).toBe('strawberry-glass')
+    expect(product?.material).toBeUndefined()
+    expect((product?.offers as { price?: string }).price).toBeUndefined()
+    expect(product?.image).toBe('https://amateru.st/decor/cover.png')
+  })
+
+  it('includes offer price when priceCents is set', () => {
+    const json = buildProductJsonLd({
+      product: { ...sample, priceCents: 250000 },
+      siteUrl: 'https://amateru.st',
+      path: '/catalog/klubnika-v-stekle'
     })
+
+    const product = (json['@graph'] as Array<Record<string, unknown>>).find(
+      (n) => n['@type'] === 'Product'
+    )
+
+    expect((product?.offers as { price: string }).price).toBe('2500.00')
   })
 })

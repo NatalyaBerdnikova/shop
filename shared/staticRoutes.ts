@@ -4,9 +4,6 @@ import { catalogProducts } from '../app/data/catalog'
 export const staticContentRoutes = [
   '/',
   '/catalog',
-  '/cart',
-  '/wishlist',
-  '/checkout',
   '/delivery',
   '/privacy',
   '/return',

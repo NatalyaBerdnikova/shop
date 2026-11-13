@@ -53,8 +53,6 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/scripts',
     '@nuxt/test-utils',
-    '@artmizu/nuxt-prometheus',
-    '@dargmuesli/nuxt-cookie-control',
     '@nuxtjs/svg-sprite'
   ],
 
@@ -63,125 +61,28 @@ export default defineNuxtConfig({
     iconsPath: false
   },
 
-  cookieControl: {
-    barPosition: 'bottom-full',
-    closeModalOnClickOutside: true,
-    isAcceptNecessaryButtonEnabled: true,
-    isControlButtonEnabled: true,
-    declineAllAcceptsNecessary: true,
-    locales: ['ru'],
-    localeTexts: {
-      ru: {
-        bannerTitle: 'Мы используем cookie',
-        bannerDescription:
-          'Нужны для работы сайта и входа в аккаунт. Вы можете принять все или только необходимые.',
-        accept: 'Принять все',
-        decline: 'Только необходимые',
-        manageCookies: 'Настроить',
-        cookiesNecessary: 'Необходимые',
-        cookiesOptional: 'Дополнительные'
-      }
-    },
-    colors: {
-      barBackground: '#0f0f10',
-      barButtonBackground: '#4d0e12',
-      barButtonColor: '#ffffff',
-      barButtonHoverBackground: '#ffffff',
-      barButtonHoverColor: '#1a1918',
-      barTextColor: '#faf9f7',
-      checkboxActiveBackground: '#4d0e12',
-      checkboxActiveCircleBackground: '#ffffff',
-      checkboxDisabledBackground: '#d4d0c8',
-      checkboxDisabledCircleBackground: '#ffffff',
-      checkboxInactiveBackground: '#1a1918',
-      checkboxInactiveCircleBackground: '#ffffff',
-      controlButtonBackground: '#0f0f10',
-      controlButtonHoverBackground: '#1a1918',
-      controlButtonIconColor: '#ffffff',
-      controlButtonIconHoverColor: '#ffffff',
-      focusRingColor: '#4d0e12',
-      modalBackground: '#ffffff',
-      modalButtonBackground: '#4d0e12',
-      modalButtonColor: '#ffffff',
-      modalButtonHoverBackground: '#1a1918',
-      modalButtonHoverColor: '#ffffff',
-      modalOverlay: '#0f0f10',
-      modalOverlayOpacity: 0.55,
-      modalTextColor: '#1a1918',
-      modalUnsavedColor: '#4d0e12'
-    },
-    cookies: {
-      necessary: [
-        {
-          id: 'ncc',
-          name: 'Согласие на cookie',
-          description:
-            'Сохраняет ваш выбор по файлам cookie (ncc_c, ncc_e).',
-          targetCookieIds: ['ncc_c', 'ncc_e']
-        },
-        {
-          id: 'auth',
-          name: 'Вход в аккаунт',
-          description:
-            'Сессия Яндекс ID и защита входа (amateru_auth_v1, amateru_oauth_state).',
-          targetCookieIds: ['amateru_auth_v1', 'amateru_oauth_state'],
-          links: {
-            '/privacy': 'Политика конфиденциальности'
-          }
-        }
-      ],
-      optional: []
-    }
-  },
-
   nitro: {
     prerender: {
       crawlLinks: true,
-      // Карточки товара и страницы меню пишутся в .output/public даже без обхода ссылок.
       routes: [...staticPrerenderRoutes]
-    },
-    storage: {
-      orders: {
-        driver: 'fs',
-        base: './.data/orders'
-      }
     }
   },
 
   routeRules: {
-    // Эти маршруты живут только в Nitro (`npm run build`). В статику их HTML не входит.
     '/api/**': { prerender: false },
     '/v1/**': { prerender: false },
     '/metrics': { prerender: false },
     '/health': { prerender: false },
-    '/order/**': { prerender: false }
+    '/cart': { redirect: '/catalog' },
+    '/wishlist': { redirect: '/catalog' },
+    '/checkout': { redirect: '/catalog' },
+    '/order/**': { redirect: '/catalog' }
   },
 
   runtimeConfig: {
-    /** PostgreSQL: NUXT_DATABASE_URL или DATABASE_URL */
     databaseUrl: '',
-    yandexOauthClientId: '',
-    yandexOauthClientSecret: '',
-    yandexPayMerchantId: '',
-    yandexPayApiKey: '',
-    yandexPaySandbox: true,
-    yandexPayMethods: 'CARD,SPLIT',
-    /** НДС для чека: 1 = 20%, 6 = не облагается. */
-    yandexPayReceiptTax: 6,
-    yandexWarehouseLocality: 'Москва',
-    yandexWarehouseRegion: 'Москва',
-    yandexWarehouseZip: '',
-    yandexWarehouseStreet: '',
-    yandexWarehouseBuilding: '',
-    yandexWarehouseAddressLine: '',
-    yandexWarehousePhone: '',
-    yandexWarehouseContactName: 'amateru.st',
-    yandexWarehouseEmail: '',
     public: {
-      siteUrl: '',
-      yandexPayMerchantId: '',
-      yandexPaySandbox: true,
-      yandexOauthClientId: ''
+      siteUrl: ''
     }
   }
 })

@@ -29,7 +29,7 @@ function resolveDatabaseUrl(): string {
 }
 
 function createDb(url: string) {
-  // max 5–10 на инстанс (Amvera / несколько контейнеров)
+  // max 5–10 на инстанс при нескольких контейнерах
   const client = postgres(url, {
     max: Number(process.env.DB_POOL_MAX || 10),
     idle_timeout: 20,

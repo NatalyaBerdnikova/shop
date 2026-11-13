@@ -25,11 +25,6 @@ function buildAdditionalProperties(product: CatalogProduct) {
   }> = [
     {
       '@type': 'PropertyValue',
-      name: 'Материал',
-      value: product.material
-    },
-    {
-      '@type': 'PropertyValue',
       name: 'Категория',
       value: product.category
     }
@@ -43,7 +38,7 @@ function buildAdditionalProperties(product: CatalogProduct) {
         name: detail.slice(0, sep).trim(),
         value: detail.slice(sep + 1).trim()
       })
-    } else {
+    } else if (detail.trim()) {
       props.push({
         '@type': 'PropertyValue',
         name: 'Характеристика',
@@ -58,7 +53,7 @@ function buildAdditionalProperties(product: CatalogProduct) {
 export type ProductJsonLdInput = {
   product: CatalogProduct
   siteUrl: string
-  /** Полный путь страницы, напр. `/catalog/ring-aurora` */
+  /** Полный путь страницы, напр. `/catalog/klubnika-v-stekle` */
   path: string
 }
 
@@ -75,6 +70,23 @@ export function buildProductJsonLd(input: ProductJsonLdInput) {
     .map((src) => toAbsoluteUrl(src, base))
     .filter(Boolean)
 
+  const offers: Record<string, unknown> = {
+    '@type': 'Offer',
+    url: productUrl,
+    priceCurrency: 'RUB',
+    availability: 'https://schema.org/InStock',
+    itemCondition: 'https://schema.org/NewCondition',
+    seller: {
+      '@type': 'Organization',
+      name: 'amateru.st',
+      url: base || undefined
+    }
+  }
+
+  if (product.priceCents != null && product.priceCents >= 0) {
+    offers.price = priceRub(product.priceCents)
+  }
+
   const productNode: Record<string, unknown> = {
     '@type': 'Product',
     '@id': `${productUrl}#product`,
@@ -84,9 +96,7 @@ export function buildProductJsonLd(input: ProductJsonLdInput) {
     mpn: product.id,
     productID: product.id,
     url: productUrl,
-    image: images.length === 1 ? images[0] : images,
     category: product.category,
-    material: product.material,
     brand: {
       '@type': 'Brand',
       name: 'amateru.st'
@@ -99,45 +109,11 @@ export function buildProductJsonLd(input: ProductJsonLdInput) {
     releaseDate: product.releasedAt,
     itemCondition: 'https://schema.org/NewCondition',
     additionalProperty: buildAdditionalProperties(product),
-    offers: {
-      '@type': 'Offer',
-      url: productUrl,
-      priceCurrency: 'RUB',
-      price: priceRub(product.priceCents),
-      availability: 'https://schema.org/InStock',
-      itemCondition: 'https://schema.org/NewCondition',
-      seller: {
-        '@type': 'Organization',
-        name: 'amateru.st',
-        url: base || undefined
-      }
-    }
+    offers
   }
 
-  if (product.weightGrams != null && product.weightGrams > 0) {
-    productNode.weight = {
-      '@type': 'QuantitativeValue',
-      value: product.weightGrams,
-      unitCode: 'GRM'
-    }
-  }
-
-  if (
-    product.lengthMm != null ||
-    product.widthMm != null ||
-    product.heightMm != null
-  ) {
-    productNode.size = {
-      '@type': 'SizeSpecification',
-      name: [
-        product.lengthMm != null ? `Д ${product.lengthMm} мм` : null,
-        product.widthMm != null ? `Ш ${product.widthMm} мм` : null,
-        product.heightMm != null ? `В ${product.heightMm} мм` : null
-      ]
-        .filter(Boolean)
-        .join(' × ')
-    }
-  }
+  if (images.length === 1) productNode.image = images[0]
+  else if (images.length > 1) productNode.image = images
 
   return {
     '@context': 'https://schema.org',

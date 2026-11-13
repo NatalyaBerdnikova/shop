@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shopContacts } from '~/data/contacts'
+import { shopContacts, socialLinks } from '~/data/contacts'
 import { footerLegalLinks, footerServiceLinks } from '~/data/navigation'
 </script>
 
@@ -10,8 +10,8 @@ footer.site-footer(role="contentinfo")
       .site-footer__brand-block
         NuxtLink.site-footer__logo(to="/") amateru.st
         p.site-footer__about
-          | Украшения из полимерной смолы: кольца, подвески, серьги и браслеты.
-          | Ручная работа и внимание к деталям.
+          | Витрина amateru.st. Чтобы заказать или уточнить детали —
+          | напишите в Telegram или VK.
 
       .site-footer__col
         h2.site-footer__heading Покупателям
@@ -23,10 +23,14 @@ footer.site-footer(role="contentinfo")
           ) {{ link.label }}
 
       address.site-footer__col.site-footer__contacts
-        h2.site-footer__heading Контакты
-        p
-          a.site-footer__contact-link.holographic-link(:href="shopContacts.phoneHref") {{ shopContacts.phoneDisplay }}
-        p
+        h2.site-footer__heading Связаться
+        p(v-for="link in socialLinks" :key="link.href")
+          a.site-footer__contact-link.holographic-link(
+            :href="link.href"
+            target="_blank"
+            rel="noopener noreferrer"
+          ) {{ link.label }}
+        p(v-if="shopContacts.email")
           a.site-footer__contact-link.holographic-link(:href="shopContacts.emailHref") {{ shopContacts.email }}
         p.site-footer__hours {{ shopContacts.hours }}
 

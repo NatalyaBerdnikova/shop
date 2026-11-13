@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { getCatalogProductBySlug } from '~/data/catalog'
+import { socialLinks } from '~/data/contacts'
+import { formatProductPrice } from '~/utils/formatMoney'
 import {
   buildProductJsonLd,
   toAbsoluteUrl
 } from '~/utils/productJsonLd'
-import { resolvePublicSiteUrl } from '~/utils/siteUrl'
 
 const route = useRoute()
 const config = useRuntimeConfig()
-const cart = useCartStore()
-const wishlist = useWishlistStore()
-const quantity = ref(1)
 const activeImageIndex = ref(0)
 
 const slug = computed(() => String(route.params.slug ?? ''))
@@ -24,10 +22,6 @@ if (!product.value) {
   })
 }
 
-const inWishlist = computed(() =>
-  product.value ? wishlist.has(product.value.id) : false
-)
-
 const activeImage = computed(
   () =>
     product.value?.images[activeImageIndex.value] ??
@@ -35,29 +29,20 @@ const activeImage = computed(
     ''
 )
 
+const hasImage = computed(() => Boolean(activeImage.value))
+
 const formattedPrice = computed(() =>
-  new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    maximumFractionDigits: 0
-  }).format((product.value?.priceCents ?? 0) / 100)
+  formatProductPrice(product.value?.priceCents)
 )
 
 const requestUrl = useRequestURL()
-const siteUrl = computed(() =>
-  resolvePublicSiteUrl(
-    config.public.siteUrl as string,
-    `${requestUrl.protocol}//${requestUrl.host}`,
-    import.meta.prerender
-  )
+const siteUrl = computed(
+  () =>
+    (config.public.siteUrl as string)?.trim() ||
+    `${requestUrl.protocol}//${requestUrl.host}`
 )
 
 const productPath = computed(() => `/catalog/${slug.value}`)
-
-const absolutePageUrl = computed(() => {
-  const url = toAbsoluteUrl(productPath.value, siteUrl.value)
-  return /^https?:\/\//i.test(url) ? url : ''
-})
 
 const productJsonLd = computed(() => {
   if (!product.value) return null
@@ -83,32 +68,6 @@ function detailParts(detail: string) {
   }
 }
 
-function addToCart() {
-  if (!product.value) return
-  cart.addItem({
-    id: product.value.id,
-    productId: product.value.id,
-    slug: product.value.slug,
-    title: product.value.title,
-    unitPriceCents: product.value.priceCents,
-    quantity: quantity.value,
-    imageUrl: product.value.images[0]
-  })
-}
-
-function toggleWishlist() {
-  if (!product.value) return
-  wishlist.toggle({
-    id: product.value.id,
-    productId: product.value.id,
-    slug: product.value.slug,
-    title: product.value.title,
-    unitPriceCents: product.value.priceCents,
-    imageUrl: product.value.images[0],
-    category: product.value.category
-  })
-}
-
 useSeoMeta({
   title: () =>
     product.value ? `${product.value.title} — amateru.st` : 'Товар',
@@ -117,7 +76,7 @@ useSeoMeta({
   ogTitle: () => product.value?.title,
   ogDescription: () => product.value?.description,
   ogType: 'website',
-  ogUrl: () => absolutePageUrl.value || undefined,
+  ogUrl: () => toAbsoluteUrl(productPath.value, siteUrl.value),
   ogImage: () => ogImage.value || undefined,
   ogLocale: 'ru_RU',
   ogSiteName: 'amateru.st',
@@ -132,27 +91,30 @@ useHead(() => {
   const jsonLd = productJsonLd.value
   if (!p || !jsonLd) return {}
 
-  const price = (p.priceCents / 100).toFixed(2)
+  const meta: Array<Record<string, string>> = [
+    { name: 'description', content: p.description },
+    { property: 'product:brand', content: 'amateru.st' },
+    { property: 'product:availability', content: 'in stock' },
+    { property: 'product:condition', content: 'new' },
+    { name: 'robots', content: 'index, follow' }
+  ]
+
+  if (p.priceCents != null) {
+    meta.push(
+      { property: 'product:price:amount', content: (p.priceCents / 100).toFixed(2) },
+      { property: 'product:price:currency', content: 'RUB' }
+    )
+  }
 
   return {
     title: `${p.title} — amateru.st`,
-    link: absolutePageUrl.value
-      ? [
-          {
-            rel: 'canonical',
-            href: absolutePageUrl.value
-          }
-        ]
-      : [],
-    meta: [
-      { name: 'description', content: p.description },
-      { property: 'product:price:amount', content: price },
-      { property: 'product:price:currency', content: 'RUB' },
-      { property: 'product:brand', content: 'amateru.st' },
-      { property: 'product:availability', content: 'in stock' },
-      { property: 'product:condition', content: 'new' },
-      { name: 'robots', content: 'index, follow' }
+    link: [
+      {
+        rel: 'canonical',
+        href: toAbsoluteUrl(productPath.value, siteUrl.value)
+      }
     ],
+    meta,
     script: [
       {
         key: 'product-jsonld',
@@ -196,6 +158,7 @@ main.product-page(
     .product-page__layout
       section.product-page__gallery
         responsive-image(
+          v-if="hasImage"
           :src="activeImage"
           :alt="product.title"
           :width="1200"
@@ -204,13 +167,15 @@ main.product-page(
           :unsplash="true"
           img-class="product-page__main-image"
         )
+        .product-page__image-placeholder(v-else)
+          span Фото скоро появится
         meta(
           v-for="(image, i) in product.images"
           :key="`${product.id}-meta-img-${i}`"
           itemprop="image"
           :content="image"
         )
-        .product-page__thumbs
+        .product-page__thumbs(v-if="product.images.length > 1")
           button.product-page__thumb(
             v-for="(image, i) in product.images"
             :key="`${product.id}-thumb-${i}`"
@@ -235,9 +200,6 @@ main.product-page(
 
         p.product-page__meta
           span(itemprop="category") {{ product.category }}
-          |  ·
-          |
-          span(itemprop="material") {{ product.material }}
         h1.product-page__title(itemprop="name") {{ product.title }}
         p.product-page__price(
           itemprop="offers"
@@ -246,6 +208,7 @@ main.product-page(
         )
           meta(itemprop="priceCurrency" content="RUB")
           meta(
+            v-if="product.priceCents != null"
             itemprop="price"
             :content="(product.priceCents / 100).toFixed(2)"
           )
@@ -261,7 +224,7 @@ main.product-page(
           span {{ formattedPrice }}
         p.product-page__description(itemprop="description") {{ product.description }}
 
-        ul.product-page__details
+        ul.product-page__details(v-if="product.details.length")
           li.product-page__detail(
             v-for="detail in product.details"
             :key="detail"
@@ -273,27 +236,16 @@ main.product-page(
             meta(:content="detailParts(detail).value" itemprop="value")
             | {{ detail }}
 
-        .product-page__buy
-          .product-page__qty
-            button.product-page__qty-btn(
-              type="button"
-              :disabled="quantity <= 1"
-              aria-label="Уменьшить количество"
-              @click="quantity = Math.max(1, quantity - 1)"
-            ) -
-            output.product-page__qty-value {{ quantity }}
-            button.product-page__qty-btn(
-              type="button"
-              aria-label="Увеличить количество"
-              @click="quantity += 1"
-            ) +
-          button.product-page__add-btn(type="button" @click="addToCart") Добавить в корзину
-          button.product-page__wish-btn(
-            type="button"
-            :class="{ 'product-page__wish-btn--active': inWishlist }"
-            :aria-pressed="inWishlist"
-            @click="toggleWishlist"
-          ) {{ inWishlist ? 'В избранном' : 'В избранное' }}
+        .product-page__contact
+          p.product-page__contact-lead Чтобы заказать или уточнить детали:
+          .product-page__contact-links
+            a.product-page__contact-btn(
+              v-for="link in socialLinks"
+              :key="link.href"
+              :href="link.href"
+              target="_blank"
+              rel="noopener noreferrer"
+            ) {{ link.label }}
 </template>
 
 <style scoped lang="scss">
@@ -333,6 +285,18 @@ main.product-page(
     aspect-ratio: 4 / 5;
     object-fit: cover;
     display: block;
+  }
+
+  &__image-placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    border-radius: 0.95rem;
+    border: 1px dashed $color-ink-12;
+    background: rgb(26 25 24 / 3%);
+    color: $color-ink-55;
+    font-size: 1rem;
   }
 
   &__thumbs {
@@ -395,60 +359,35 @@ main.product-page(
     gap: 0.45rem;
   }
 
-  &__buy {
-    margin-top: 1.2rem;
-    display: flex;
-    gap: 0.65rem;
-    align-items: center;
-    flex-wrap: wrap;
+  &__contact {
+    margin-top: 1.4rem;
+    display: grid;
+    gap: 0.75rem;
   }
 
-  &__qty {
+  &__contact-lead {
+    margin: 0;
+    color: $color-ink-55;
+    font-size: 0.95rem;
+  }
+
+  &__contact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  &__contact-btn {
     display: inline-flex;
     align-items: center;
-    border: 1px solid $color-ink-12;
-    border-radius: 999px;
-    overflow: hidden;
-    background: $color-paper;
-  }
-
-  &__qty-btn {
-    border: none;
-    background: transparent;
-    width: 2rem;
-    height: 2rem;
-    cursor: pointer;
-  }
-
-  &__qty-value {
-    min-width: 1.6rem;
-    text-align: center;
-    font-size: 0.9rem;
-  }
-
-  &__add-btn {
-    border: none;
+    justify-content: center;
+    height: 2.4rem;
+    padding-inline: 1.15rem;
     border-radius: 999px;
     background: $color-gold;
     color: $color-white;
-    height: 2.2rem;
-    padding-inline: 1rem;
-    cursor: pointer;
-  }
-
-  &__wish-btn {
-    border: 1px solid $color-ink-12;
-    border-radius: 999px;
-    background: $color-paper;
-    color: $color-ink;
-    height: 2.2rem;
-    padding-inline: 1rem;
-    cursor: pointer;
-
-    &--active {
-      border-color: $color-gold;
-      color: $color-gold;
-    }
+    text-decoration: none;
+    font-size: 0.9rem;
   }
 }
 

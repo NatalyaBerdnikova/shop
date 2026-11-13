@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { socialLinks } from '~/data/contacts'
+
 useHead({
-  title: 'Доставка и оплата',
+  title: 'Доставка',
   meta: [
     {
       name: 'description',
       content:
-        'Доставка украшений amateru.st по России: Яндекс Доставка и СДЭК через чекаут Яндекса. Оплата картой, СБП и Сплитом.'
+        'Как заказать и получить изделие amateru.st: напишите в Telegram или VK — условия доставки согласуем лично.'
     }
   ]
 })
@@ -15,57 +17,37 @@ useHead({
 .delivery-page
   .container
     header.delivery-page__header
-      h1.delivery-page__title Доставка и оплата
+      h1.delivery-page__title Доставка
       p.delivery-page__lead
-        | Заказ оформляется в чекауте Яндекса: там же выбираете доставку и оплачиваете.
+        | Сейчас сайт работает как витрина: заказ оформляется напрямую у продавца
+        | в Telegram или VK. Условия и стоимость доставки согласуем при переписке.
 
     .delivery-page__sections
       section.delivery-block
-        h2.delivery-block__title Способы доставки
+        h2.delivery-block__title Как заказать
         p.delivery-block__text
-          | Самовывоза из мастерской нет. В чекауте Яндекса доступны
-          |
-          strong Яндекс Доставка
-          |
-          | и
-          |
-          strong СДЭК
-          | : пункт выдачи или постамат выбирается на их карте.
-        p.delivery-block__text
-          | Курьер до двери появится, если его включат в кабинете Яндекса.
+          | Выберите изделие в каталоге и напишите нам. Уточним наличие, цену и способ получения.
 
       section.delivery-block
-        h2.delivery-block__title Стоимость и сроки
+        h2.delivery-block__title Доставка
         p.delivery-block__text
-          | Стоимость и срок считает Яндекс после выбора города и способа доставки.
-        p.delivery-block__text
-          | Доставка всегда платная.
+          | Варианты и сроки зависят от города и объёма заказа — обсуждаем индивидуально.
+        p.delivery-block__text Самовывоз из мастерской по согласованию.
 
       section.delivery-block
         h2.delivery-block__title Оплата
-        ul.delivery-block__list
-          li Картой любого российского банка
-          li СБП
-          li Сплит — оплата частями, если способ включён в кабинете
-
-      section.delivery-block
-        h2.delivery-block__title Отправка и отслеживание
         p.delivery-block__text
-          | Заказ передаём в доставку после оплаты и комплектации.
-          | После отправки придёт уведомление и, если перевозчик его выдаёт, трек-номер.
-
-      section.delivery-block
-        h2.delivery-block__title Получение заказа
-        p.delivery-block__text
-          | При получении проверьте упаковку и комплектность.
-          | Если есть повреждения — зафиксируйте это с сотрудником ПВЗ и напишите нам,
-          | приложив фото и номер заказа.
-        p.delivery-block__text
-          | Если заказ не забрали в срок хранения, повторная отправка согласовывается отдельно.
+          | Способ оплаты согласуем при заказе. Онлайн-оплата на сайте пока отключена.
 
       .delivery-page__cta-row
         NuxtLink.delivery-page__cta(to="/catalog") Перейти в каталог
-        NuxtLink.delivery-page__ghost(to="/cart") Открыть корзину
+        a.delivery-page__ghost(
+          v-for="link in socialLinks"
+          :key="link.href"
+          :href="link.href"
+          target="_blank"
+          rel="noopener noreferrer"
+        ) {{ link.label }}
 </template>
 
 <style scoped lang="scss">
@@ -159,15 +141,6 @@ useHead({
     &:last-child {
       margin-bottom: 0;
     }
-  }
-
-  &__list {
-    margin: 0;
-    padding-left: 1.1rem;
-    display: grid;
-    gap: 0.4rem;
-    font-size: 0.98rem;
-    line-height: 1.5;
   }
 }
 </style>

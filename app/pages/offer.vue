@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shopContacts } from '~/data/contacts'
+import { shopContacts, socialLinks } from '~/data/contacts'
 
 useHead({
   title: 'Публичная оферта',
@@ -7,7 +7,7 @@ useHead({
     {
       name: 'description',
       content:
-        'Как устроена покупка на amateru.st: цены в каталоге, оформление, доставка и оплата в чекауте Яндекса.'
+        'amateru.st — витрина каталога. Актуальные условия заказа и доставки уточняйте у продавца.'
     }
   ]
 })
@@ -16,32 +16,32 @@ useHead({
 <template lang="pug">
 InfoPage(
   title="Публичная оферта"
-  lead="Цены и описание изделий указаны в каталоге. Доставку и оплату выбираете в чекауте Яндекса."
+  lead="Сайт показывает каталог. Заказ, доставка и оплата согласуются напрямую с продавцом."
 )
   section.info-block
     h2.info-block__title Товары и цены
     p.info-block__text
-      | Актуальные названия, описания и цены — на страницах каталога.
-      | Цена в карточке — цена изделия до доставки.
+      | Названия и описания указаны в каталоге. Цена может уточняться при заказе.
     p.info-block__text
       NuxtLink(to="/catalog") Открыть каталог
 
   section.info-block
-    h2.info-block__title Заказ, доставка и оплата
+    h2.info-block__title Заказ и доставка
     p.info-block__text
-      | В чекауте Яндекса доступны Яндекс Доставка и СДЭК, оплата картой, через СБП или Сплитом.
-      | Стоимость доставки считает Яндекс после выбора города.
+      | Онлайн-оплата и корзина на сайте отключены. Напишите в Telegram или VK —
+      | подтвердим наличие и обсудим доставку.
     p.info-block__text
-      NuxtLink(to="/delivery") Подробнее о доставке и оплате
+      NuxtLink(to="/delivery") Подробнее о доставке
 
   section.info-block
-    h2.info-block__title Реквизиты
+    h2.info-block__title Связаться
     p.info-block__text
-      | Полные реквизиты продавца на сайте не опубликованы. Вопросы по заказу — по телефону и почте.
-    p.info-block__text
-      a(:href="shopContacts.phoneHref") {{ shopContacts.phoneDisplay }}
-      br
-      a(:href="shopContacts.emailHref") {{ shopContacts.email }}
-      br
-      | {{ shopContacts.hours }}
+      template(v-for="link in socialLinks" :key="link.href")
+        a(
+          :href="link.href"
+          target="_blank"
+          rel="noopener noreferrer"
+        ) {{ link.label }}
+        br
+      a(v-if="shopContacts.email" :href="shopContacts.emailHref") {{ shopContacts.email }}
 </template>

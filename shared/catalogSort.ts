@@ -34,7 +34,7 @@ export function catalogSortQueryParam(sort: CatalogSortValue) {
 
 export interface CatalogSortable {
   id: string
-  priceCents: number
+  priceCents: number | null
   releasedAt: string
 }
 
@@ -49,17 +49,25 @@ function compareId(a: string, b: string) {
   return 0
 }
 
+function priceOrFallback(value: number | null, fallback: number) {
+  return value == null || !Number.isFinite(value) ? fallback : value
+}
+
 export function sortCatalogProducts<T extends CatalogSortable>(
   products: readonly T[],
   sort: CatalogSortValue
 ): T[] {
   return [...products].sort((left, right) => {
     if (sort === 'price-asc') {
-      const byPrice = left.priceCents - right.priceCents
+      const byPrice =
+        priceOrFallback(left.priceCents, Number.POSITIVE_INFINITY) -
+        priceOrFallback(right.priceCents, Number.POSITIVE_INFINITY)
       return byPrice !== 0 ? byPrice : compareId(left.id, right.id)
     }
     if (sort === 'price-desc') {
-      const byPrice = right.priceCents - left.priceCents
+      const byPrice =
+        priceOrFallback(right.priceCents, Number.NEGATIVE_INFINITY) -
+        priceOrFallback(left.priceCents, Number.NEGATIVE_INFINITY)
       return byPrice !== 0 ? byPrice : compareId(left.id, right.id)
     }
     const byDate = releasedAtTime(right.releasedAt) - releasedAtTime(left.releasedAt)

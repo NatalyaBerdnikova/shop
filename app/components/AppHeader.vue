@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { primaryNavLinks } from '~/data/navigation'
+import { socialLinks } from '~/data/contacts'
 
-const cart = useCartStore()
-const wishlist = useWishlistStore()
-const auth = useAuthStore()
 const route = useRoute()
-const router = useRouter()
-
 const menuOpen = ref(false)
 const drawerId = useId()
-const accountMenuOpen = ref(false)
 
 function closeMenu() {
   menuOpen.value = false
@@ -19,23 +14,10 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-function openLogin() {
-  closeMenu()
-  accountMenuOpen.value = false
-  auth.openLoginModal()
-}
-
-async function logout() {
-  accountMenuOpen.value = false
-  closeMenu()
-  await auth.logout()
-}
-
 watch(
   () => route.fullPath,
   () => {
     closeMenu()
-    accountMenuOpen.value = false
   }
 )
 
@@ -45,32 +27,11 @@ watch(menuOpen, (open) => {
 })
 
 function onEscape(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    if (menuOpen.value) closeMenu()
-    accountMenuOpen.value = false
-  }
+  if (e.key === 'Escape' && menuOpen.value) closeMenu()
 }
 
 onMounted(() => {
   window.addEventListener('keydown', onEscape)
-
-  if (route.query.auth === 'success') {
-    auth.fetchMe().then(() => {
-      auth.closeLoginModal()
-    })
-    const query = { ...route.query }
-    delete query.auth
-    delete query.reason
-    router.replace({ query })
-  }
-
-  if (route.query.auth === 'error') {
-    auth.openLoginModal()
-    const query = { ...route.query }
-    delete query.auth
-    delete query.reason
-    router.replace({ query })
-  }
 })
 
 onUnmounted(() => {
@@ -88,105 +49,20 @@ header.site-header(role="banner")
       NuxtLink.site-header__logo(to="/" @click="closeMenu") amateru.st
 
       nav.site-header__nav.site-header__nav--desktop(aria-label="Основное меню")
-        NuxtLink.site-header__link.holographic-link(
+        NuxtLink.site-header__link(
           v-for="link in primaryNavLinks"
           :key="link.to"
           :to="link.to"
         ) {{ link.label }}
 
       .site-header__actions
-        .site-header__account(v-if="auth.isLoggedIn")
-          button.site-header__icon-btn(
-            type="button"
-            :aria-expanded="accountMenuOpen"
-            aria-haspopup="true"
-            :aria-label="auth.fullName || 'Аккаунт'"
-            @click="accountMenuOpen = !accountMenuOpen"
-          )
-            svg.site-header__icon(
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            )
-              path(d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2")
-              circle(cx="12" cy="7" r="4")
-          .site-header__account-menu(v-if="accountMenuOpen")
-            p.site-header__account-meta(v-if="auth.fullName") {{ auth.fullName }}
-            p.site-header__account-meta(v-if="auth.user?.email") {{ auth.user.email }}
-            p.site-header__account-meta(v-if="auth.user?.phone") {{ auth.user.phone }}
-            p.site-header__account-meta(v-if="auth.user?.birthday") {{ auth.user.birthday }}
-            button.site-header__account-logout(
-              type="button"
-              @click="logout"
-            ) Выйти
-
-        button.site-header__icon-btn(
-          v-else
-          type="button"
-          aria-label="Войти"
-          @click="openLogin"
-        )
-          svg.site-header__icon(
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          )
-            path(d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2")
-            circle(cx="12" cy="7" r="4")
-
-        NuxtLink.site-header__icon-link(
-          to="/wishlist"
-          aria-label="Избранное"
-        )
-          svg.site-header__icon(
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          )
-            path(d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z")
-          span.site-header__icon-badge(v-if="wishlist.count > 0" aria-hidden="true") {{ wishlist.count }}
-
-        NuxtLink.site-header__icon-link(
-          to="/cart"
-          aria-label="Корзина"
-        )
-          svg.site-header__icon(
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          )
-            path(d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z")
-            line(x1="3" y1="6" x2="21" y2="6")
-            path(d="M16 10a4 4 0 0 1-8 0")
-          span.site-header__icon-badge(v-if="cart.totalQuantity > 0" aria-hidden="true") {{ cart.totalQuantity }}
+        a.site-header__social(
+          v-for="link in socialLinks"
+          :key="link.href"
+          :href="link.href"
+          target="_blank"
+          rel="noopener noreferrer"
+        ) {{ link.label }}
 
         button.site-header__burger(
           type="button"
@@ -225,7 +101,7 @@ header.site-header(role="banner")
         @click="closeMenu"
       ) ×
 
-    nav.site-header__drawer-nav(aria-label="Разделы магазина")
+    nav.site-header__drawer-nav(aria-label="Разделы")
       NuxtLink.site-header__drawer-link(
         v-for="link in primaryNavLinks"
         :key="link.to"
@@ -233,23 +109,15 @@ header.site-header(role="banner")
         @click="closeMenu"
       ) {{ link.label }}
 
-    .site-header__drawer-auth
-      template(v-if="auth.isLoggedIn")
-        p.site-header__drawer-user {{ auth.fullName }}
-        button.site-header__drawer-login(type="button" @click="logout") Выйти
-      button.site-header__drawer-login(
-        v-else
-        type="button"
-        @click="openLogin"
-      ) Войти через Яндекс ID
-
-    NuxtLink.site-header__drawer-cart(to="/wishlist" @click="closeMenu")
-      | Избранное
-      template(v-if="wishlist.count > 0") &nbsp;({{ wishlist.count }})
-
-    NuxtLink.site-header__drawer-cart(to="/cart" @click="closeMenu")
-      | Корзина
-      template(v-if="cart.totalQuantity > 0") &nbsp;({{ cart.totalQuantity }})
+    .site-header__drawer-social
+      a.site-header__drawer-social-link(
+        v-for="link in socialLinks"
+        :key="link.href"
+        :href="link.href"
+        target="_blank"
+        rel="noopener noreferrer"
+        @click="closeMenu"
+      ) {{ link.label }}
 </template>
 
 <style scoped lang="scss">
@@ -334,69 +202,26 @@ $bp-nav: 1024px;
   &__actions {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.55rem;
   }
 
-  &__account {
-    position: relative;
-  }
-
-  &__account-menu {
-    position: absolute;
-    top: calc(100% + 0.4rem);
-    right: 0;
-    z-index: 110;
-    min-width: 12rem;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid $color-ink-10;
-    border-radius: 0.75rem;
-    background: $color-white;
-    box-shadow: 0 12px 30px rgb(15 15 16 / 10%);
-    display: grid;
-    gap: 0.35rem;
-  }
-
-  &__account-meta {
-    margin: 0;
-    font-size: 0.78rem;
-    color: $color-ink-55;
-    word-break: break-word;
-  }
-
-  &__account-logout {
-    margin-top: 0.25rem;
-    padding: 0;
-    border: none;
-    background: transparent;
+  &__social {
+    display: none;
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
     color: $color-ink;
-    font: inherit;
-    font-size: 0.85rem;
-    text-align: left;
-    cursor: pointer;
-
-    &:hover {
-      color: $color-gold;
-    }
-  }
-
-  &__icon-btn,
-  &__icon-link {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.3rem;
-    height: 2.3rem;
-    padding: 0;
+    padding: 0.45rem 0.65rem;
     border-radius: 999px;
     border: 1px solid $color-ink-12;
-    background: transparent;
-    color: $color-ink;
-    text-decoration: none;
-    cursor: pointer;
     transition:
       border-color 0.2s ease,
       color 0.2s ease;
+
+    @media (min-width: $bp-nav) {
+      display: inline-flex;
+      align-items: center;
+    }
 
     &:hover {
       border-color: $color-gold;
@@ -407,27 +232,6 @@ $bp-nav: 1024px;
       outline: 2px solid $color-gold;
       outline-offset: 2px;
     }
-  }
-
-  &__icon {
-    display: block;
-    flex-shrink: 0;
-  }
-
-  &__icon-badge {
-    position: absolute;
-    top: -0.3rem;
-    right: -0.35rem;
-    min-width: 1.1rem;
-    height: 1.1rem;
-    padding: 0 0.28rem;
-    font-size: 0.65rem;
-    font-weight: 600;
-    line-height: 1.1rem;
-    text-align: center;
-    color: $color-white;
-    background: $color-gold;
-    border-radius: 999px;
   }
 
   &__burger {
@@ -561,46 +365,19 @@ $bp-nav: 1024px;
     }
   }
 
-  &__drawer-auth {
-    margin-top: 1rem;
+  &__drawer-social {
+    margin-top: auto;
     padding-top: 1rem;
     border-top: 1px solid $color-ink-10;
     display: grid;
     gap: 0.55rem;
   }
 
-  &__drawer-user {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-  }
-
-  &__drawer-login {
-    border: none;
-    background: transparent;
-    padding: 0;
-    font: inherit;
+  &__drawer-social-link {
     font-size: 0.95rem;
     font-weight: 600;
-    color: $color-ink;
-    cursor: pointer;
-    text-align: left;
-
-    &:hover {
-      color: $color-gold;
-    }
-  }
-
-  &__drawer-cart {
-    margin-top: 0.75rem;
-    padding-top: 1rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-align: center;
     text-decoration: none;
     color: $color-ink;
-    border-top: 1px solid $color-ink-10;
 
     &:hover {
       color: $color-gold;

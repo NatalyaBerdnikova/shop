@@ -49,9 +49,7 @@ function resolvePublicFile(urlPath) {
 const requiredFiles = [
   'index.html',
   'catalog/index.html',
-  'cart/index.html',
-  'wishlist/index.html',
-  'checkout/index.html',
+  'catalog/klubnika-v-stekle/index.html',
   'delivery/index.html',
   'privacy/index.html',
   'return/index.html',
@@ -77,28 +75,16 @@ if (!home.includes('/decor/cover.png')) {
   fail('главная не ссылается на обложку /decor/cover.png')
 }
 
-const checkout = readText('checkout/index.html')
-if (!checkout.includes('Оформление заказа')) {
-  fail('страница оформления потеряла заголовок')
-}
-if (!checkout.includes('стороне Яндекса')) {
-  fail('страница оформления потеряла описание чекаута')
-}
-const checkoutScript = filesSafe().find((file) => {
-  if (!file.endsWith('.js')) return false
-  return readFileSync(file, 'utf8').includes('Перейти к оформлению')
-})
-if (!checkoutScript) {
-  fail('в клиентском бандле нет кнопки «Перейти к оформлению»')
-}
-
 const mock = readFileSync(join(root, 'app/data/catalog.mock.ts'), 'utf8')
 const products = [
   ...mock.matchAll(/slug:\s*'([^']+)'[\s\S]*?title:\s*'([^']+)'/g)
 ].map((match) => ({ slug: match[1], title: match[2] }))
 
-if (products.length < 12) {
-  fail(`в моке каталога ожидалось минимум 12 товаров, найдено ${products.length}`)
+if (products.length !== 1) {
+  fail(`в моке каталога ожидался 1 товар, найдено ${products.length}`)
+}
+if (products[0].slug !== 'klubnika-v-stekle') {
+  fail(`ожидался slug klubnika-v-stekle, получен ${products[0].slug}`)
 }
 
 const catalogHtml = readText('catalog/index.html')
@@ -114,8 +100,11 @@ for (const product of products) {
       `title /catalog/${product.slug} = «${title}», ожидалось имя «${product.title}»`
     )
   }
-  if (!html.includes('Добавить в корзину')) {
-    fail(`страница /catalog/${product.slug} потеряла кнопку корзины`)
+  if (html.includes('Добавить в корзину')) {
+    fail(`страница /catalog/${product.slug} всё ещё содержит кнопку корзины`)
+  }
+  if (!html.includes('Telegram') || !html.includes('VK')) {
+    fail(`страница /catalog/${product.slug} без ссылок на Telegram/VK`)
   }
   if (html.includes('Найдено товаров')) {
     fail(
@@ -143,9 +132,7 @@ for (const file of files.filter((item) =>
 const assetRefs = new Set()
 for (const file of files.filter((item) => item.endsWith('.html'))) {
   const html = readFileSync(file, 'utf8')
-  for (const match of html.matchAll(
-    /(?:src|href)="(\/[^"]+)"/g
-  )) {
+  for (const match of html.matchAll(/(?:src|href)="(\/[^"]+)"/g)) {
     assetRefs.add(match[1])
   }
 }

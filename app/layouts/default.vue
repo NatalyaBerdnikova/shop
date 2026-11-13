@@ -4,7 +4,6 @@
   main.site-layout__main
     slot
   AppFooter
-  AuthLoginModal
 </template>
 
 <style scoped lang="scss">
